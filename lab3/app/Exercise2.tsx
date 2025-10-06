@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 
 export default function TodoList() {
-  const [todos, setTodos] = useState([]);
+  type Todo = { id: number; text: string; completed: boolean };
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [inputText, setInputText] = useState('');
 
   const addTodo = () => {
@@ -17,17 +18,17 @@ export default function TodoList() {
     }
   };
 
-  const toggleTodo = (id) => {
+  const toggleTodo = (id: number) => {
     setTodos(todos.map(todo => 
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
   };
 
-  const deleteTodo = (id) => {
+  const deleteTodo = (id: number) => {
     setTodos(todos.filter(todo => todo.id !== id));
   };
 
-  const renderTodo = ({ item }) => (
+  const renderTodo = ({ item }: { item: Todo }) => (
     <View style={styles.todoItem}>
       <TouchableOpacity 
         style={[styles.todoText, item.completed && styles.completedTodo]}
