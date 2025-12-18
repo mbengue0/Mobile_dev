@@ -10,7 +10,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -45,9 +45,9 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
-import { useMemo, useState, createContext } from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { createContext, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export type MailboxFilter =
   | 'inbox'
