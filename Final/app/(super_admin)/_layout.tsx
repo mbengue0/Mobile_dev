@@ -19,6 +19,12 @@ export default function SuperAdminLayout() {
                     title: 'User Management',
                 }}
             />
+            <Stack.Screen
+                name="system-settings"
+                options={{
+                    title: 'System Settings',
+                }}
+            />
         </Stack>
     );
 }

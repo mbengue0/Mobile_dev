@@ -12,26 +12,57 @@ Build an offline-first mobile app for DAUST Cafeteria using **Expo SDK 54**, **S
 - **Navigation**: `expo-router` v6
 
 ## ✅ Completed Features
-1. **Authentication**: Login/Signup with self-healing profiles
-2. **Student Flow**: Wallet, ticket purchase (batch), QR codes, pull-to-refresh menu
-3. **Admin Flow**: QR Scanner, Cashier, Menu Upload, Settings with logout
-4. **Super Admin**: User management, role promotion
-5. **Menu Management**: Image upload to Supabase Storage, display in student purchase screen
 
-## 🐛 Known Issues
-1. **Menu Images Not Loading**: Storage bucket is public, files exist, database has records, but images don't display in app
-   - Storage bucket verified as `public: true`
-   - 8 files in storage, 3 records in database
-   - Database URLs currently point to wrong format (investigating)
+### Authentication & User Management
+1. **Authentication**: Login/Signup with self-healing profile creation
+2. **Role-Based Access**: Student, Admin, and Super Admin roles
+3. **Super Admin**: User management dashboard with role promotion
 
-## 📋 Recent Changes
-- Fixed admin logout (added Settings tab and screen)
-- Fixed double image picker bug in `menu.tsx`
-- Created multiple SQL scripts to fix storage permissions
-- Added Pull-to-Refresh to student purchase screen
+### Student Features
+1. **Digital Wallet**: View balance, transaction history
+2. **Ticket Purchase**: Buy single or batch tickets (up to 10)
+3. **QR Tickets**: Display QR codes for meal validation
+4. **Menu Display**: View daily menu images with fallback to recent menus
+5. **Pull-to-Refresh**: Update menu and wallet balance
+
+### Admin Features
+1. **QR Scanner**: Validate tickets with time window enforcement
+2. **Cashier**: Add funds to student wallets
+3. **Menu Management**: Upload daily menu images to Supabase Storage
+4. **Settings**: Logout functionality
+
+### Super Admin Features
+1. **User Management**: View all users, filter by role
+2. **Role Promotion**: Promote students to admin
+3. **System Settings**: Configure meal times and prices dynamically
+   - Adjustable time windows for breakfast, lunch, dinner
+   - Configurable prices per meal type
+   - Reset to defaults option
+
+### System Features
+1. **Offline Support**: TanStack Query with caching
+2. **Menu Fallback**: Shows recent menu if today's not uploaded
+3. **Auto-Cleanup**: Function to delete menus older than 7 days
+4. **Dynamic Validation**: Meal time windows read from database settings
+5. **Scanner Race Condition Fix**: Prevents double-scan errors
+
+## 📁 Database Organization
+- `database/schema.sql`: Complete database schema
+- `database/migrations/`: Sequential migration files
+- `database/functions/`: Reusable database functions
+
+## 📋 Recent Changes (Dec 2024)
+- ✅ Implemented configurable meal settings system
+- ✅ Fixed scanner double-scan race condition
+- ✅ Added menu image fallback logic
+- ✅ Organized SQL files into clean folder structure
+- ✅ Fixed admin logout functionality
+- ✅ Resolved menu image upload issues (0-byte files)
 
 ## 📄 Key Files
+- `app/(student)/purchase.tsx`: Ticket purchase with dynamic pricing
 - `app/(admin)/menu.tsx`: Menu upload with image picker
-- `app/(student)/purchase.tsx`: Ticket purchase with menu display
-- `diagnose_and_fix_storage.sql`: Storage bucket diagnostic script
-- `fix_menu_rls.sql`: RLS policy fix for menu updates
+- `app/(admin)/scanner.tsx`: QR validation with time windows
+- `app/(super_admin)/system-settings.tsx`: Configurable meal settings
+- `database/migrations/004_create_system_settings.sql`: Settings table
+- `database/migrations/005_update_validate_ticket.sql`: Dynamic validation

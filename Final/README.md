@@ -8,21 +8,25 @@ A production-ready, offline-first mobile application for DAUST University cafete
 - **Digital Wallet**: View balance and transaction history
 - **Batch Ticket Purchase**: Buy multiple tickets at once (up to 10)
 - **QR Tickets**: Display QR codes for active tickets
+- **Menu Display**: View daily menu images with fallback to recent menus
+- **Dynamic Pricing**: Prices automatically update based on admin settings
 - **Offline Support**: View purchased tickets even without internet
 - **Real-time Updates**: Instant balance and ticket status updates
 
 ### For Admins
-- **QR Scanner**: Continuous scan with time window validation
+- **QR Scanner**: Continuous scan with time window validation (fixed race condition)
 - **Cashier System**: Search users and add wallet funds
-- **Menu Management**: Upload daily menu images (placeholder)
-- **Time Validation**: Automatic meal time enforcement
-  - Breakfast: 7:00 AM - 11:00 AM
-  - Lunch: 12:00 PM - 3:00 PM
-  - Dinner: 7:00 PM - 10:00 PM
+- **Menu Management**: Upload daily menu images to Supabase Storage
+- **Settings**: Logout functionality
+- **Time Validation**: Automatic meal time enforcement (configurable by super admin)
 
 ### For Super Admins
 - **User Management**: View all users with role filtering
 - **Staff Promotion**: Promote students to admin role
+- **System Settings**: Configure meal times and prices dynamically
+  - Adjustable time windows for breakfast, lunch, dinner
+  - Configurable prices per meal type (FCFA)
+  - Reset to defaults option
 - **System Overview**: Monitor all user accounts
 
 ## 🛠️ Tech Stack
@@ -95,7 +99,8 @@ Final/
 │   │   ├── cashier.tsx      # Add funds
 │   │   └── menu.tsx         # Menu management
 │   ├── (super_admin)/       # Super admin features
-│   │   └── users.tsx        # User management
+│   │   ├── users.tsx        # User management
+│   │   └── system-settings.tsx  # Meal times & prices config
 │   ├── _layout.tsx          # Root layout
 │   └── index.tsx            # Entry point
 ├── hooks/
@@ -104,7 +109,10 @@ Final/
 │   └── supabase.ts          # Supabase client
 ├── providers/
 │   └── QueryProvider.tsx    # React Query setup
-├── schema.sql               # Database schema
+├── database/
+│   ├── schema.sql           # Complete database schema
+│   ├── migrations/          # Sequential migration files
+│   └── functions/           # Reusable database functions
 ├── .env                     # Environment variables
 └── package.json
 ```
@@ -126,9 +134,10 @@ Final/
 
 ### Database RPCs
 - `purchase_ticket`: Atomic ticket purchase with wallet deduction
-- `validate_ticket`: Scanner validation with time windows
+- `validate_ticket`: Scanner validation with dynamic time windows from settings
 - `add_wallet_funds`: Admin-only wallet top-up
 - `promote_user`: Super admin-only role promotion
+- `cleanup_old_menu_images`: Auto-delete menus older than 7 days
 
 ### Self-Healing Auth
 - Auto-create profile on signup via database trigger
@@ -154,6 +163,10 @@ Final/
 ### Super Admin Flow
 1. **Users**: View all users with filtering
 2. **Promote**: Upgrade students to admin staff
+3. **System Settings**: Configure meal times and prices
+   - Adjust time windows (24-hour format)
+   - Set prices per meal type
+   - Reset to defaults if needed
 
 ## 🐛 Troubleshooting
 

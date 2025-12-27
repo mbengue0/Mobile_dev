@@ -13,6 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 interface User {
     id: string;
@@ -185,6 +186,14 @@ export default function UsersScreen() {
                 }
             />
 
+            <TouchableOpacity
+                style={styles.settingsButton}
+                onPress={() => router.push('/(super_admin)/system-settings')}
+            >
+                <Ionicons name="settings" size={20} color="#fff" />
+                <Text style={styles.settingsText}>System Settings</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
                 <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
@@ -300,6 +309,22 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#999',
         marginTop: 15,
+    },
+    settingsButton: {
+        backgroundColor: '#5856D6',
+        margin: 15,
+        marginBottom: 0,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    settingsText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
     logoutButton: {
         backgroundColor: '#FF3B30',

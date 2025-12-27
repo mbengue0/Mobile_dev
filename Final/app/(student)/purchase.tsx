@@ -19,11 +19,17 @@ import { useRouter } from 'expo-router';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner';
 
-const MEAL_PRICES: Record<MealType, number> = {
-    breakfast: 750,
-    lunch: 1500,
-    dinner: 1000,
-};
+interface MealPrices {
+    breakfast: number;
+    lunch: number;
+    dinner: number;
+}
+
+interface MealTimes {
+    breakfast: { start: number; end: number };
+    lunch: { start: number; end: number };
+    dinner: { start: number; end: number };
+}
 
 export default function PurchaseScreen() {
     const { user, profile, refreshProfile } = useAuth();
@@ -33,7 +39,43 @@ export default function PurchaseScreen() {
     const queryClient = useQueryClient();
     const router = useRouter();
 
-    const currentPrice = MEAL_PRICES[selectedMeal];
+    // Fetch dynamic system settings (prices and times)
+    const { data: systemSettings, isLoading: settingsLoading } = useQuery({
+        queryKey: ['system_settings'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('system_settings')
+                .select('*')
+                .in('setting_key', ['meal_prices', 'meal_times']);
+
+            if (error) {
+                console.error('Error fetching settings:', error);
+                // Fallback defaults
+                return {
+                    mealPrices: { breakfast: 500, lunch: 1000, dinner: 800 } as MealPrices,
+                    mealTimes: {
+                        breakfast: { start: 7, end: 11 },
+                        lunch: { start: 12, end: 15 },
+                        dinner: { start: 19, end: 22 },
+                    } as MealTimes,
+                };
+            }
+
+            const mealPrices = data?.find(s => s.setting_key === 'meal_prices')?.setting_value as MealPrices;
+            const mealTimes = data?.find(s => s.setting_key === 'meal_times')?.setting_value as MealTimes;
+
+            return {
+                mealPrices: mealPrices || { breakfast: 500, lunch: 1000, dinner: 800 },
+                mealTimes: mealTimes || {
+                    breakfast: { start: 7, end: 11 },
+                    lunch: { start: 12, end: 15 },
+                    dinner: { start: 19, end: 22 },
+                },
+            };
+        },
+    });
+
+    const currentPrice = systemSettings?.mealPrices?.[selectedMeal] || 0;
 
     const { data: menuImage, refetch: refetchMenu } = useQuery({
         queryKey: ['menu_image', selectedMeal],
@@ -84,7 +126,7 @@ export default function PurchaseScreen() {
     const purchaseMutation = useMutation({
         mutationFn: async ({ mealType, qty }: { mealType: MealType; qty: number }) => {
             const results = [];
-            const price = MEAL_PRICES[mealType];
+            const price = systemSettings?.mealPrices?.[mealType] || 0;
 
             for (let i = 0; i < qty; i++) {
                 const { data, error } = await supabase.rpc('purchase_ticket', {
@@ -171,14 +213,17 @@ export default function PurchaseScreen() {
     };
 
     const getMealTime = (mealType: MealType) => {
-        switch (mealType) {
-            case 'breakfast':
-                return '7:00 AM - 11:00 AM';
-            case 'lunch':
-                return '12:00 PM - 3:00 PM';
-            case 'dinner':
-                return '7:00 PM - 10:00 PM';
-        }
+        if (!systemSettings?.mealTimes) return '';
+
+        const { start, end } = systemSettings.mealTimes[mealType];
+
+        const formatHour = (h: number) => {
+            const period = h >= 12 ? 'PM' : 'AM';
+            const hour12 = h % 12 || 12;
+            return `${hour12} ${period}`;
+        };
+
+        return `${formatHour(start)} - ${formatHour(end)}`;
     };
 
     const meals: MealType[] = ['breakfast', 'lunch', 'dinner'];
@@ -238,7 +283,7 @@ export default function PurchaseScreen() {
                                         selectedMeal === meal && styles.mealNameSelected,
                                     ]}
                                 >
-                                    {meal.charAt(0).toUpperCase() + meal.slice(1)} ({MEAL_PRICES[meal]} FCFA)
+                                    {meal.charAt(0).toUpperCase() + meal.slice(1)} ({systemSettings?.mealPrices?.[meal] || 0} FCFA)
                                 </Text>
                                 <Text style={styles.mealTime}>{getMealTime(meal)}</Text>
                             </View>
