@@ -7,8 +7,8 @@ import { useAuth } from './useAuth';
 export function useNotifications() {
     const { user } = useAuth();
     const router = useRouter();
-    const notificationListener = useRef<any>();
-    const responseListener = useRef<any>();
+    const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+    const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
     useEffect(() => {
         // Initialize notifications when user is authenticated

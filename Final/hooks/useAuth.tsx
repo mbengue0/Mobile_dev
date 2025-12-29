@@ -10,6 +10,9 @@ interface Profile {
     student_id: string | null;
     role: 'student' | 'admin' | 'super_admin';
     wallet_balance: number;
+    push_token?: string | null;
+    notifications_enabled?: boolean;
+    last_notification_at?: string | null;
     created_at: string;
 }
 
