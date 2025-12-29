@@ -1,8 +1,13 @@
-# DAUST Cafeteria Mobile App
+# UniTicket - Smart Campus Dining
 
-A production-ready, offline-first mobile application for DAUST University cafeteria ticketing system built with **Expo SDK 54** and **Supabase**.
+A production-ready, offline-first mobile application for campus cafeteria management built with **Expo SDK 54** and **Supabase**. Designed as a scalable multi-tenant SaaS product.
 
 ## 🎯 Features
+
+### 🎨 Branding & UX
+- **Animated Splash Screen**: Professional Lottie animation with smooth transitions
+- **Modern Design**: Clean coral accent (#FF4757) with intuitive navigation
+- **Responsive UI**: Keyboard-aware forms and smooth animations
 
 ### For Students
 - **Digital Wallet**: View balance and transaction history
@@ -10,6 +15,7 @@ A production-ready, offline-first mobile application for DAUST University cafete
 - **QR Tickets**: Display QR codes for active tickets
 - **Menu Display**: View daily menu images with fallback to recent menus
 - **Dynamic Pricing**: Prices automatically update based on admin settings
+- **Push Notifications**: Instant feedback on ticket purchases
 - **Offline Support**: View purchased tickets even without internet
 - **Real-time Updates**: Instant balance and ticket status updates
 
@@ -17,7 +23,7 @@ A production-ready, offline-first mobile application for DAUST University cafete
 - **QR Scanner**: Continuous scan with time window validation (fixed race condition)
 - **Cashier System**: Search users and add wallet funds
 - **Menu Management**: Upload daily menu images to Supabase Storage
-- **Settings**: Logout functionality
+- **Settings Screen**: Profile info, notification preferences, logout
 - **Time Validation**: Automatic meal time enforcement (configurable by super admin)
 
 ### For Super Admins
@@ -29,6 +35,13 @@ A production-ready, offline-first mobile application for DAUST University cafete
   - Reset to defaults option
 - **System Overview**: Monitor all user accounts
 
+### 🔔 Notification System
+- **Local Notifications**: Instant feedback for user actions
+- **Push Token Management**: Device registration for future server push
+- **Notification Preferences**: User-controlled enable/disable (persisted to database)
+- **Notification Logging**: Track all sent notifications
+- **Deep Linking**: Tap notifications to navigate to relevant screens
+
 ## 🛠️ Tech Stack
 
 - **Framework**: React Native (Expo SDK 54)
@@ -36,8 +49,10 @@ A production-ready, offline-first mobile application for DAUST University cafete
 - **Backend**: Supabase (PostgreSQL, Auth, Realtime)
 - **State Management**: @tanstack/react-query v5
 - **Offline Support**: AsyncStorage + React Query Persist
-- **Navigation**: Expo Router v4
-- **Camera**: expo-camera v16
+- **Navigation**: Expo Router v6
+- **Notifications**: expo-notifications ~0.29.9
+- **Animations**: lottie-react-native ^7.2.0, react-native-reanimated ~3.16.1
+- **Camera**: expo-camera ~17.0.10
 - **QR Codes**: react-native-qrcode-svg
 
 ## 📋 Prerequisites
