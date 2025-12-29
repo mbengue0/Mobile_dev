@@ -1,6 +1,7 @@
 import { Slot, Stack, useRouter, useSegments } from 'expo-router';
 import { QueryProvider } from '../providers/QueryProvider';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
+import { useNotifications } from '../hooks/useNotifications';
 import { useEffect } from 'react';
 import AnimatedSplashScreen from '../components/AnimatedSplashScreen';
 
@@ -8,6 +9,9 @@ function AuthGuard() {
     const { session, loading } = useAuth();
     const segments = useSegments();
     const router = useRouter();
+
+    // Initialize notifications
+    useNotifications();
 
     useEffect(() => {
         if (loading) return;

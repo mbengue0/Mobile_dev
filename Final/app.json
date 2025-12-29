@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Final",
-    "slug": "Final",
+    "name": "UniTicket",
+    "slug": "uniticket",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,19 +11,47 @@
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#FF4757",
+      "androidMode": "default",
+      "androidCollapsedTitle": "{{unread_count}} new notifications"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.uniticket.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.uniticket.app",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#FF4757",
+          "sounds": []
+        }
+      ]
+    ]
   }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -6,14 +6,23 @@ import {
     TouchableOpacity,
     Alert,
     ScrollView,
+    Switch,
+    Modal,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import NotificationService from '../../services/NotificationService';
 
 export default function SettingsScreen() {
     const { user, profile, signOut } = useAuth();
     const router = useRouter();
+
+    const [notificationsEnabled, setNotificationsEnabled] = useState(
+        profile?.notifications_enabled ?? true
+    );
+    const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
 
     const handleLogout = () => {
         Alert.alert(
@@ -26,10 +35,34 @@ export default function SettingsScreen() {
                     style: 'destructive',
                     onPress: async () => {
                         await signOut();
-                        router.replace('/login');
+                        router.replace('/(auth)/login');
                     },
                 },
             ]
+        );
+    };
+
+    const handleNotificationToggle = async (value: boolean) => {
+        setNotificationsEnabled(value);
+
+        // Persist to database
+        if (user) {
+            await NotificationService.updateNotificationPreference(user.id, value);
+        }
+
+        Alert.alert(
+            'Notifications',
+            value ? 'Notifications enabled' : 'Notifications disabled',
+            [{ text: 'OK' }]
+        );
+    };
+
+    const handleDarkModeToggle = (value: boolean) => {
+        setDarkModeEnabled(value);
+        Alert.alert(
+            'Dark Mode',
+            'Dark mode will be available in a future update',
+            [{ text: 'OK' }]
         );
     };
 
@@ -37,7 +70,7 @@ export default function SettingsScreen() {
         <ScrollView style={styles.container}>
             <View style={styles.profileSection}>
                 <View style={styles.avatarContainer}>
-                    <Ionicons name="person-circle" size={80} color="#FF9500" />
+                    <Ionicons name="person-circle" size={80} color="#FF4757" />
                 </View>
                 <Text style={styles.name}>{profile?.full_name || 'Admin User'}</Text>
                 <Text style={styles.email}>{user?.email}</Text>
@@ -51,7 +84,10 @@ export default function SettingsScreen() {
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Account</Text>
 
-                <TouchableOpacity style={styles.menuItem}>
+                <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => setShowProfileModal(true)}
+                >
                     <Ionicons name="person-outline" size={24} color="#666" />
                     <Text style={styles.menuText}>Profile Information</Text>
                     <Ionicons name="chevron-forward" size={24} color="#ccc" />
@@ -60,7 +96,7 @@ export default function SettingsScreen() {
                 {profile?.role === 'super_admin' && (
                     <TouchableOpacity
                         style={styles.menuItem}
-                        onPress={() => router.push('/(super_admin)/dashboard')}
+                        onPress={() => router.push('/(super_admin)/users')}
                     >
                         <Ionicons name="shield-checkmark-outline" size={24} color="#666" />
                         <Text style={styles.menuText}>Super Admin Dashboard</Text>
@@ -70,19 +106,29 @@ export default function SettingsScreen() {
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Settings</Text>
+                <Text style={styles.sectionTitle}>Preferences</Text>
 
-                <TouchableOpacity style={styles.menuItem}>
+                <View style={styles.menuItem}>
                     <Ionicons name="notifications-outline" size={24} color="#666" />
                     <Text style={styles.menuText}>Notifications</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
-                </TouchableOpacity>
+                    <Switch
+                        value={notificationsEnabled}
+                        onValueChange={handleNotificationToggle}
+                        trackColor={{ false: '#ccc', true: '#FF4757' }}
+                        thumbColor="#fff"
+                    />
+                </View>
 
-                <TouchableOpacity style={styles.menuItem}>
+                <View style={styles.menuItem}>
                     <Ionicons name="moon-outline" size={24} color="#666" />
                     <Text style={styles.menuText}>Dark Mode</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
-                </TouchableOpacity>
+                    <Switch
+                        value={darkModeEnabled}
+                        onValueChange={handleDarkModeToggle}
+                        trackColor={{ false: '#ccc', true: '#FF4757' }}
+                        thumbColor="#fff"
+                    />
+                </View>
             </View>
 
             <TouchableOpacity
@@ -93,7 +139,59 @@ export default function SettingsScreen() {
                 <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
 
-            <Text style={styles.version}>Version 1.0.0</Text>
+            <Text style={styles.version}>UniTicket v1.0.0</Text>
+
+            {/* Profile Information Modal */}
+            <Modal
+                visible={showProfileModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowProfileModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Profile Information</Text>
+                            <TouchableOpacity onPress={() => setShowProfileModal(false)}>
+                                <Ionicons name="close" size={28} color="#333" />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.profileInfo}>
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Full Name</Text>
+                                <Text style={styles.infoValue}>{profile?.full_name || 'N/A'}</Text>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Email</Text>
+                                <Text style={styles.infoValue}>{user?.email}</Text>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>Role</Text>
+                                <Text style={styles.infoValue}>
+                                    {profile?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                                </Text>
+                            </View>
+
+                            <View style={styles.infoRow}>
+                                <Text style={styles.infoLabel}>User ID</Text>
+                                <Text style={[styles.infoValue, styles.monospace]}>
+                                    {user?.id?.substring(0, 8)}...
+                                </Text>
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => setShowProfileModal(false)}
+                        >
+                            <Text style={styles.closeButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </ScrollView>
     );
 }
@@ -125,7 +223,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     roleBadge: {
-        backgroundColor: '#FF9500',
+        backgroundColor: '#FF4757',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 12,
@@ -185,5 +283,67 @@ const styles = StyleSheet.create({
         color: '#999',
         fontSize: 12,
         marginBottom: 30,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingTop: 20,
+        paddingBottom: 40,
+        paddingHorizontal: 20,
+        minHeight: 400,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        paddingBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    profileInfo: {
+        marginTop: 10,
+    },
+    infoRow: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    infoLabel: {
+        fontSize: 13,
+        color: '#666',
+        marginBottom: 5,
+        textTransform: 'uppercase',
+        fontWeight: '600',
+    },
+    infoValue: {
+        fontSize: 16,
+        color: '#333',
+    },
+    monospace: {
+        fontFamily: 'monospace',
+    },
+    closeButton: {
+        backgroundColor: '#FF4757',
+        padding: 15,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
     },
 });

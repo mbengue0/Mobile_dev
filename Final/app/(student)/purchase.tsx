@@ -16,6 +16,7 @@ import { supabase } from '../../lib/supabase';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useNotifications } from '../../hooks/useNotifications';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner';
 
@@ -38,6 +39,7 @@ export default function PurchaseScreen() {
     const [imageError, setImageError] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
+    const { sendNotification } = useNotifications();
 
     // Fetch dynamic system settings (prices and times)
     const { data: systemSettings, isLoading: settingsLoading } = useQuery({
@@ -143,9 +145,19 @@ export default function PurchaseScreen() {
 
             return results;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['tickets', user?.id] });
             refreshProfile();
+
+            // Send notification
+            const qty = parseInt(quantity) || 1;
+            sendNotification(
+                'Ticket Purchased! 🎫',
+                `Your ${selectedMeal} ticket${qty > 1 ? 's' : ''} ${qty > 1 ? 'are' : 'is'} ready to use`,
+                'ticket_purchase',
+                { meal_type: selectedMeal, quantity: qty }
+            );
+
             Alert.alert(
                 'Success!',
                 `Successfully purchased ${quantity} ticket(s)`,
