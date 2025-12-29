@@ -2,7 +2,7 @@ import { Slot, Stack, useRouter, useSegments } from 'expo-router';
 import { QueryProvider } from '../providers/QueryProvider';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import AnimatedSplashScreen from '../components/AnimatedSplashScreen';
 
 function AuthGuard() {
     const { session, loading } = useAuth();
@@ -23,21 +23,15 @@ function AuthGuard() {
         }
     }, [session, loading, segments]);
 
-    if (loading) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#007AFF" />
-            </View>
-        );
-    }
-
     return (
-        <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(student)" options={{ headerShown: false }} />
-            <Stack.Screen name="(admin)" options={{ headerShown: false }} />
-            <Stack.Screen name="(super_admin)" options={{ headerShown: false }} />
-        </Stack>
+        <AnimatedSplashScreen isLoading={loading}>
+            <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(student)" options={{ headerShown: false }} />
+                <Stack.Screen name="(admin)" options={{ headerShown: false }} />
+                <Stack.Screen name="(super_admin)" options={{ headerShown: false }} />
+            </Stack>
+        </AnimatedSplashScreen>
     );
 }
 
