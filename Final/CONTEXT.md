@@ -25,6 +25,7 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - **Identity**: "Kanteen" (formerly UniTicket/DAUST Cafeteria)
 - **Assets**: Custom "QR + Cutlery" vector logo deployed (App Icon, Adaptive Icon).
 - **Splash Screen**: Premium Deep Navy (#003366) with Gold accents. Scaling animation.
+- **Auth Screens**: Unified Navy Blue theme, clean typography, and logo integration.
 - **Theme**: Customizable SaaS-ready UI (Default: Coral #FF4757).
 
 ### 👥 User Roles & Access

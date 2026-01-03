@@ -7,6 +7,10 @@ import {
     StyleSheet,
     Alert,
     ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { useRouter, Link } from 'expo-router';
@@ -54,102 +58,151 @@ export default function SignupScreen() {
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join DAUST Cafeteria</Text>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardView}
+        >
+            <ScrollView contentContainerStyle={styles.container}>
+                {/* Logo Section */}
+                <View style={styles.header}>
+                    <Image
+                        source={require('../../assets/splash-icon.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
+                    <Text style={styles.title}>Create your Account</Text>
+                    <Text style={styles.subtitle}>Smart Campus Dining</Text>
+                </View>
 
-            <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                value={fullName}
-                onChangeText={setFullName}
-            />
+                {/* Form Section */}
+                <View style={styles.form}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Full Name"
+                        placeholderTextColor="#999"
+                        value={fullName}
+                        onChangeText={setFullName}
+                    />
 
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-            />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Email Address"
+                        placeholderTextColor="#999"
+                        value={email}
+                        onChangeText={setEmail}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                    />
 
-            <TextInput
-                style={styles.input}
-                placeholder="Password (min 6 characters)"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Password (min 6 characters)"
+                        placeholderTextColor="#999"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry
+                    />
 
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleSignup}
-                disabled={loading}
-            >
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Sign Up</Text>
-                )}
-            </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={handleSignup}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <Text style={styles.buttonText}>Create Account</Text>
+                        )}
+                    </TouchableOpacity>
 
-            <Link href="/(auth)/login" asChild>
-                <TouchableOpacity style={styles.linkButton}>
-                    <Text style={styles.linkText}>Already have an account? Login</Text>
-                </TouchableOpacity>
-            </Link>
-        </View>
+                    <Link href="/(auth)/login" asChild>
+                        <TouchableOpacity style={styles.linkButton}>
+                            <Text style={styles.linkText}>
+                                Already have an account? <Text style={styles.linkHighlight}>Log In</Text>
+                            </Text>
+                        </TouchableOpacity>
+                    </Link>
+                </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    keyboardView: {
         flex: 1,
-        padding: 20,
+        backgroundColor: '#FFFFFF',
+    },
+    container: {
+        flexGrow: 1,
+        padding: 24,
         justifyContent: 'center',
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#FFFFFF',
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 32,
+    },
+    logo: {
+        width: 80,
+        height: 80,
+        marginBottom: 20,
     },
     title: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 10,
-        color: '#333',
+        color: '#333333',
+        marginBottom: 8,
+        letterSpacing: -0.5,
     },
     subtitle: {
         fontSize: 16,
-        textAlign: 'center',
-        marginBottom: 40,
-        color: '#666',
+        color: '#666666',
+        fontWeight: '500',
+    },
+    form: {
+        width: '100%',
     },
     input: {
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 15,
+        backgroundColor: '#F5F5F5',
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        marginBottom: 16,
         fontSize: 16,
-        borderWidth: 1,
-        borderColor: '#ddd',
+        color: '#333',
+        borderWidth: 0,
     },
     button: {
-        backgroundColor: '#007AFF',
-        padding: 15,
-        borderRadius: 8,
+        backgroundColor: '#003366', // Brand Navy Blue
+        paddingVertical: 16,
+        borderRadius: 12,
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 8,
+        shadowColor: '#003366',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
     },
     buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
+        color: '#FFFFFF',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
     linkButton: {
-        marginTop: 20,
+        marginTop: 24,
         alignItems: 'center',
     },
     linkText: {
-        color: '#007AFF',
+        color: '#666666',
         fontSize: 14,
+    },
+    linkHighlight: {
+        color: '#003366',
+        fontWeight: 'bold',
     },
 });
