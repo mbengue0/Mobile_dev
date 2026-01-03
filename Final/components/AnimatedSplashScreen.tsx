@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import LottieView from 'lottie-react-native';
+import { View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface AnimatedSplashScreenProps {
     isLoading: boolean;
@@ -9,6 +9,7 @@ interface AnimatedSplashScreenProps {
 
 export default function AnimatedSplashScreen({ isLoading, children }: AnimatedSplashScreenProps) {
     const opacity = useRef(new Animated.Value(1)).current;
+    const scale = useRef(new Animated.Value(1)).current;
     const [showSplash, setShowSplash] = React.useState(true);
     const [minTimeElapsed, setMinTimeElapsed] = React.useState(false);
 
@@ -26,12 +27,19 @@ export default function AnimatedSplashScreen({ isLoading, children }: AnimatedSp
         // 1. Auth loading is complete (!isLoading)
         // 2. Minimum display time has elapsed (minTimeElapsed)
         if (!isLoading && minTimeElapsed && showSplash) {
-            // Start fade out animation
-            Animated.timing(opacity, {
-                toValue: 0,
-                duration: 800,
-                useNativeDriver: true,
-            }).start(() => {
+            // Start fade out and scale up animation concurrently
+            Animated.parallel([
+                Animated.timing(opacity, {
+                    toValue: 0,
+                    duration: 800,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scale, {
+                    toValue: 1.5,
+                    duration: 800,
+                    useNativeDriver: true,
+                })
+            ]).start(() => {
                 setShowSplash(false);
             });
         }
@@ -45,19 +53,15 @@ export default function AnimatedSplashScreen({ isLoading, children }: AnimatedSp
         <>
             {children}
             <Animated.View style={[styles.splashContainer, { opacity }]}>
-                <View style={styles.content}>
-                    {/* Lottie Animation */}
-                    <LottieView
-                        source={require('../assets/animations/splash_animation.json')}
-                        autoPlay
-                        loop
-                        style={styles.animation}
-                    />
+                <StatusBar barStyle="light-content" backgroundColor="#003366" />
+                <Animated.View style={[styles.content, { transform: [{ scale }] }]}>
+                    {/* Icon Placeholder */}
+                    <Ionicons name="restaurant" size={80} color="#FFFFFF" style={styles.icon} />
 
                     {/* Brand Logo Text */}
-                    <Text style={styles.brandText}>UniTicket</Text>
+                    <Text style={styles.brandText}>Kanteen</Text>
                     <Text style={styles.tagline}>Smart Campus Dining</Text>
-                </View>
+                </Animated.View>
             </Animated.View>
         </>
     );
@@ -70,7 +74,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#003366', // Deep Navy Blue
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
@@ -79,22 +83,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    animation: {
-        width: 200,
-        height: 200,
+    icon: {
         marginBottom: 20,
     },
     brandText: {
-        fontSize: 42,
+        fontSize: 48,
         fontWeight: 'bold',
-        color: '#FF4757',
-        letterSpacing: -1,
+        color: '#FFFFFF',
+        letterSpacing: 1,
         marginBottom: 8,
     },
     tagline: {
         fontSize: 16,
-        color: '#666',
+        color: '#FFD700', // Gold for premium feel
         fontWeight: '500',
-        letterSpacing: 0.5,
+        letterSpacing: 2,
+        textTransform: 'uppercase',
     },
 });

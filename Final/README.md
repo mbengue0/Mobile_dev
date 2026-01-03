@@ -1,11 +1,11 @@
-# UniTicket - Smart Campus Dining
+# Kanteen - Campus Dining SaaS
 
-A production-ready, offline-first mobile application for campus cafeteria management built with **Expo SDK 54** and **Supabase**. Designed as a scalable multi-tenant SaaS product.
+**Kanteen** is a white-label ready, offline-first mobile platform for university dining management, built with **Expo SDK 54** and **Supabase**.
 
 ## 🎯 Features
 
 ### 🎨 Branding & UX
-- **Animated Splash Screen**: Professional Lottie animation with smooth transitions
+- **Animated Splash Screen**: Premium Deep Navy design with scaling animation
 - **Modern Design**: Clean coral accent (#FF4757) with intuitive navigation
 - **Responsive UI**: Keyboard-aware forms and smooth animations
 
