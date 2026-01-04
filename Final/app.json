@@ -2,14 +2,15 @@
   "expo": {
     "name": "Kanteen",
     "slug": "kanteen",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#132439",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash-new.png",
       "resizeMode": "contain",
-      "backgroundColor": "#003366"
+      "backgroundColor": "#132439"
     },
     "notification": {
       "icon": "./assets/icon.png",

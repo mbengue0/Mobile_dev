@@ -1,9 +1,14 @@
 import { Slot, Stack, useRouter, useSegments } from 'expo-router';
+import { View } from 'react-native';
 import { QueryProvider } from '../providers/QueryProvider';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
 import { useNotifications } from '../hooks/useNotifications';
 import { useEffect } from 'react';
 import AnimatedSplashScreen from '../components/AnimatedSplashScreen';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
 
 function AuthGuard() {
     const { session, loading } = useAuth();
@@ -43,7 +48,9 @@ export default function RootLayout() {
     return (
         <QueryProvider>
             <AuthProvider>
-                <AuthGuard />
+                <View style={{ flex: 1, backgroundColor: '#132439' }}>
+                    <AuthGuard />
+                </View>
             </AuthProvider>
         </QueryProvider>
     );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, StatusBar } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Animated, StatusBar, Image } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 
 interface AnimatedSplashScreenProps {
     isLoading: boolean;
@@ -15,6 +15,18 @@ export default function AnimatedSplashScreen({ isLoading, children }: AnimatedSp
 
     // Ensure splash shows for minimum 2 seconds
     useEffect(() => {
+        // Hide native splash screen immediately when this component mounts
+        // so our animated splash takes over
+        const hideNativeSplash = async () => {
+            try {
+                await SplashScreen.hideAsync();
+            } catch (e) {
+                console.warn(e);
+            }
+        };
+
+        hideNativeSplash();
+
         const timer = setTimeout(() => {
             setMinTimeElapsed(true);
         }, 2000);
@@ -53,10 +65,14 @@ export default function AnimatedSplashScreen({ isLoading, children }: AnimatedSp
         <>
             {children}
             <Animated.View style={[styles.splashContainer, { opacity }]}>
-                <StatusBar barStyle="light-content" backgroundColor="#003366" />
+                <StatusBar barStyle="light-content" backgroundColor="#132439" />
                 <Animated.View style={[styles.content, { transform: [{ scale }] }]}>
-                    {/* Icon Placeholder */}
-                    <Ionicons name="restaurant" size={80} color="#FFFFFF" style={styles.icon} />
+                    {/* Brand Icon */}
+                    <Image
+                        source={require('../assets/splash-icon.png')}
+                        style={styles.logo}
+                        resizeMode="contain"
+                    />
 
                     {/* Brand Logo Text */}
                     <Text style={styles.brandText}>Kanteen</Text>
@@ -74,7 +90,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: '#003366', // Deep Navy Blue
+        backgroundColor: '#132439', // Deep Navy Blue
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
@@ -83,7 +99,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    icon: {
+    logo: {
+        width: 100,
+        height: 100,
         marginBottom: 20,
     },
     brandText: {

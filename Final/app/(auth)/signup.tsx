@@ -131,13 +131,13 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
     keyboardView: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#132439', // Unified Deep Navy Blue
     },
     container: {
         flexGrow: 1,
         padding: 24,
         justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#132439', // Unified Deep Navy Blue
     },
     header: {
         alignItems: 'center',
@@ -151,20 +151,20 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#333333',
+        color: '#FFFFFF', // White for visibility on Navy
         marginBottom: 8,
         letterSpacing: -0.5,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666666',
+        color: '#FFD700', // Gold to match splash screen tagline
         fontWeight: '500',
     },
     form: {
         width: '100%',
     },
     input: {
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#FFFFFF', // White inputs for high contrast
         paddingVertical: 16,
         paddingHorizontal: 20,
         borderRadius: 12,
@@ -174,12 +174,12 @@ const styles = StyleSheet.create({
         borderWidth: 0,
     },
     button: {
-        backgroundColor: '#003366', // Brand Navy Blue
+        backgroundColor: '#FFFFFF', // White button for contrast
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',
         marginTop: 8,
-        shadowColor: '#003366',
+        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 4,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     buttonText: {
-        color: '#FFFFFF',
+        color: '#132439', // Navy text on white button
         fontSize: 18,
         fontWeight: 'bold',
     },
@@ -198,11 +198,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     linkText: {
-        color: '#666666',
+        color: '#CCCCCC', // Light grey for readability on Navy
         fontSize: 14,
     },
     linkHighlight: {
-        color: '#003366',
+        color: '#FFD700', // Gold for emphasis
         fontWeight: 'bold',
     },
 });

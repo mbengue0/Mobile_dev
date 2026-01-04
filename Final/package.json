@@ -25,6 +25,7 @@
     "expo-linking": "~8.0.10",
     "expo-notifications": "~0.29.9",
     "expo-router": "~6.0.19",
+    "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "lottie-react-native": "^7.2.0",
     "react": "19.1.0",
