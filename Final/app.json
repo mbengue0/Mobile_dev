@@ -3,12 +3,12 @@
     "name": "Kanteen",
     "slug": "kanteen",
     "version": "1.0.1",
+    "scheme": "kanteen",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#132439",
     "splash": {
-      "image": "./assets/splash-new.png",
+      "image": "./assets/splash-new-v2.png",
       "resizeMode": "contain",
       "backgroundColor": "#132439"
     },
@@ -20,20 +20,23 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.uniticket.app"
+      "bundleIdentifier": "com.kanteen.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Kanteen needs camera access to scan meal tickets."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#132439"
       },
-      "package": "com.uniticket.app",
+      "package": "com.kanteen.app",
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "NOTIFICATIONS"
+        "NOTIFICATIONS",
+        "CAMERA"
       ]
     },
     "web": {
@@ -51,6 +54,12 @@
           "icon": "./assets/icon.png",
           "color": "#FF4757",
           "sounds": []
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Kanteen to access your camera to scan meal tickets."
         }
       ]
     ]

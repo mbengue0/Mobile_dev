@@ -69,7 +69,7 @@ export default function AnimatedSplashScreen({ isLoading, children }: AnimatedSp
                 <Animated.View style={[styles.content, { transform: [{ scale }] }]}>
                     {/* Brand Icon */}
                     <Image
-                        source={require('../assets/splash-icon.png')}
+                        source={require('../assets/splash-new-v2.png')}
                         style={styles.logo}
                         resizeMode="contain"
                     />
@@ -107,13 +107,13 @@ const styles = StyleSheet.create({
     brandText: {
         fontSize: 48,
         fontWeight: 'bold',
-        color: '#FFFFFF',
+        color: '#FFFFFF', // White Text
         letterSpacing: 1,
         marginBottom: 8,
     },
     tagline: {
         fontSize: 16,
-        color: '#FFD700', // Gold for premium feel
+        color: '#FFD700', // Gold Tagline
         fontWeight: '500',
         letterSpacing: 2,
         textTransform: 'uppercase',
