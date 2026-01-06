@@ -6,7 +6,7 @@
     "scheme": "kanteen",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash-new-v2.png",
       "resizeMode": "contain",

@@ -6,6 +6,7 @@ import { useNotifications } from '../hooks/useNotifications';
 import { useEffect } from 'react';
 import AnimatedSplashScreen from '../components/AnimatedSplashScreen';
 import * as SplashScreen from 'expo-splash-screen';
+import OfflineNotice from '../components/OfflineNotice';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -49,6 +50,7 @@ export default function RootLayout() {
         <QueryProvider>
             <AuthProvider>
                 <View style={{ flex: 1, backgroundColor: '#132439' }}>
+                    <OfflineNotice />
                     <AuthGuard />
                 </View>
             </AuthProvider>

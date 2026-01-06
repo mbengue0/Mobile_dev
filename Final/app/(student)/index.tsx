@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -6,29 +6,73 @@ import {
     TouchableOpacity,
     RefreshControl,
     ScrollView,
+    ActivityIndicator
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { supabase } from '../../lib/supabase';
+
+interface Transaction {
+    id: string;
+    amount: number;
+    transaction_type: 'deposit' | 'purchase';
+    description: string;
+    created_at: string;
+}
 
 export default function StudentDashboard() {
-    const { profile, signOut, refreshProfile } = useAuth();
+    const { profile, refreshProfile } = useAuth();
     const router = useRouter();
     const [refreshing, setRefreshing] = React.useState(false);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loadingTransactions, setLoadingTransactions] = useState(true);
+
+    const fetchTransactions = async () => {
+        if (!profile?.id) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('wallet_transactions')
+                .select('*')
+                .eq('user_id', profile.id)
+                .order('created_at', { ascending: false })
+                .limit(5);
+
+            if (error) {
+                console.error('Error fetching transactions:', error);
+            } else {
+                setTransactions(data || []);
+            }
+        } catch (error) {
+            console.error('Unexpected error:', error);
+        } finally {
+            setLoadingTransactions(false);
+        }
+    };
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await refreshProfile();
+        await Promise.all([refreshProfile(), fetchTransactions()]);
         setRefreshing(false);
     };
+
+    useEffect(() => {
+        fetchTransactions();
+    }, [profile?.id]);
 
     if (!profile) {
         return (
             <View style={styles.container}>
-                <Text>Loading...</Text>
+                <ActivityIndicator size="large" color="#007AFF" />
             </View>
         );
     }
+
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
 
     return (
         <ScrollView
@@ -38,8 +82,15 @@ export default function StudentDashboard() {
             }
         >
             <View style={styles.header}>
-                <Text style={styles.greeting}>Welcome, {profile.full_name}!</Text>
-                <Text style={styles.studentId}>ID: {profile.student_id}</Text>
+                <View style={styles.headerTop}>
+                    <View>
+                        <Text style={styles.greeting}>Welcome, {profile.full_name?.split(' ')[0]}!</Text>
+                        <Text style={styles.studentId}>ID: {profile.student_id}</Text>
+                    </View>
+                    <TouchableOpacity onPress={() => router.push('/(student)/profile')}>
+                        <Ionicons name="person-circle" size={40} color="#fff" />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <View style={styles.walletCard}>
@@ -47,32 +98,65 @@ export default function StudentDashboard() {
                     <Ionicons name="wallet" size={32} color="#007AFF" />
                     <Text style={styles.walletLabel}>Wallet Balance</Text>
                 </View>
-                <Text style={styles.balance}>{profile.wallet_balance} FCFA</Text>
+                <Text style={styles.balance}>{profile.wallet_balance.toLocaleString()} FCFA</Text>
             </View>
 
             <View style={styles.quickActions}>
                 <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-                <TouchableOpacity
-                    style={styles.actionCard}
-                    onPress={() => router.push('/(student)/purchase')}
-                >
-                    <Ionicons name="cart" size={24} color="#007AFF" />
-                    <Text style={styles.actionText}>Buy Tickets</Text>
-                </TouchableOpacity>
+                <View style={styles.actionRow}>
+                    <TouchableOpacity
+                        style={styles.actionCard}
+                        onPress={() => router.push('/(student)/purchase')}
+                    >
+                        <Ionicons name="cart" size={28} color="#007AFF" />
+                        <Text style={styles.actionText}>Buy Tickets</Text>
+                    </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.actionCard}
-                    onPress={() => router.push('/(student)/tickets')}
-                >
-                    <Ionicons name="ticket" size={24} color="#007AFF" />
-                    <Text style={styles.actionText}>View My Tickets</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.actionCard}
+                        onPress={() => router.push('/(student)/tickets')}
+                    >
+                        <Ionicons name="ticket" size={28} color="#007AFF" />
+                        <Text style={styles.actionText}>My Tickets</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
 
-            <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-                <Text style={styles.logoutText}>Logout</Text>
-            </TouchableOpacity>
+            <View style={styles.transactionsSection}>
+                <Text style={styles.sectionTitle}>Recent Activity</Text>
+
+                {loadingTransactions ? (
+                    <ActivityIndicator size="small" color="#666" />
+                ) : transactions.length === 0 ? (
+                    <Text style={styles.emptyText}>No recent transactions</Text>
+                ) : (
+                    transactions.map((tx) => (
+                        <View key={tx.id} style={styles.transactionItem}>
+                            <View style={[
+                                styles.iconContainer,
+                                { backgroundColor: tx.transaction_type === 'deposit' ? '#E8F5E9' : '#FFEBEE' }
+                            ]}>
+                                <Ionicons
+                                    name={tx.transaction_type === 'deposit' ? 'arrow-up' : 'arrow-down'}
+                                    size={20}
+                                    color={tx.transaction_type === 'deposit' ? '#4CAF50' : '#F44336'}
+                                />
+                            </View>
+                            <View style={styles.txDetails}>
+                                <Text style={styles.txDescription}>{tx.description}</Text>
+                                <Text style={styles.txDate}>{formatDate(tx.created_at)}</Text>
+                            </View>
+                            <Text style={[
+                                styles.txAmount,
+                                { color: tx.transaction_type === 'deposit' ? '#4CAF50' : '#F44336' }
+                            ]}>
+                                {tx.transaction_type === 'deposit' ? '+' : ''}{tx.amount} FCFA
+                            </Text>
+                        </View>
+                    ))
+                )}
+            </View>
         </ScrollView>
     );
 }
@@ -85,7 +169,13 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: '#007AFF',
         padding: 20,
-        paddingTop: 40,
+        paddingTop: 50,
+        paddingBottom: 30,
+    },
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     greeting: {
         fontSize: 24,
@@ -100,14 +190,16 @@ const styles = StyleSheet.create({
     },
     walletCard: {
         backgroundColor: '#fff',
-        margin: 20,
+        marginHorizontal: 20,
+        marginTop: -20,
         padding: 20,
-        borderRadius: 12,
+        borderRadius: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowRadius: 8,
+        elevation: 5,
+        marginBottom: 25,
     },
     walletHeader: {
         flexDirection: 'row',
@@ -118,50 +210,87 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         marginLeft: 10,
+        fontWeight: '500',
     },
     balance: {
-        fontSize: 36,
+        fontSize: 32,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#132439',
     },
     quickActions: {
-        padding: 20,
-        paddingTop: 0,
+        paddingHorizontal: 20,
+        marginBottom: 20,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: '600',
+        fontWeight: '700',
         marginBottom: 15,
         color: '#333',
+    },
+    actionRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 15,
     },
     actionCard: {
         backgroundColor: '#fff',
         padding: 20,
         borderRadius: 12,
-        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        flex: 1,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
         elevation: 2,
     },
     actionText: {
-        fontSize: 16,
-        marginLeft: 15,
+        fontSize: 14,
+        marginTop: 10,
         color: '#333',
-    },
-    logoutButton: {
-        backgroundColor: '#FF3B30',
-        margin: 20,
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    logoutText: {
-        color: '#fff',
-        fontSize: 16,
         fontWeight: '600',
     },
+    transactionsSection: {
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+    },
+    transactionItem: {
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    txDetails: {
+        flex: 1,
+    },
+    txDescription: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 4,
+    },
+    txDate: {
+        fontSize: 12,
+        color: '#999',
+    },
+    txAmount: {
+        fontSize: 15,
+        fontWeight: 'bold',
+    },
+    emptyText: {
+        color: '#999',
+        fontStyle: 'italic',
+        textAlign: 'center',
+        marginTop: 10,
+    }
 });
