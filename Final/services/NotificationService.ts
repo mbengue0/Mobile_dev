@@ -204,6 +204,47 @@ class NotificationService {
             });
         }
     }
+    /**
+     * Send a remote push notification via Expo API
+     * Note: In a production app, this should ideally be done from a backend server
+     * to protect API keys (if any) and ensure reliability.
+     */
+    async sendPushNotification(
+        expoPushToken: string,
+        title: string,
+        body: string,
+        data?: NotificationData
+    ): Promise<void> {
+        try {
+            const message = {
+                to: expoPushToken,
+                sound: 'default',
+                title: title,
+                body: body,
+                data: data || {},
+            };
+
+            const response = await fetch('https://exp.host/--/api/v2/push/send', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Accept-encoding': 'gzip, deflate',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(message),
+            });
+
+            const result = await response.json();
+
+            if (result.errors) {
+                console.error('Expo Push API Error:', result.errors);
+            } else {
+                console.log('Push Notification Sent:', result.data);
+            }
+        } catch (error) {
+            console.error('Error sending push notification:', error);
+        }
+    }
 }
 
 export default new NotificationService();

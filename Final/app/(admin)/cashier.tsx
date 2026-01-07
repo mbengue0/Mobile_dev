@@ -14,12 +14,15 @@ import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 
+import NotificationService from '../../services/NotificationService';
+
 interface SearchResult {
     id: string;
     email: string;
     full_name: string;
     student_id: string;
     wallet_balance: number;
+    push_token?: string; // Added push_token
 }
 
 export default function CashierScreen() {
@@ -60,7 +63,7 @@ export default function CashierScreen() {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('id, email, full_name, student_id, wallet_balance')
+                .select('id, email, full_name, student_id, wallet_balance, push_token') // Select push_token
                 .or(`email.ilike.%${query}%,student_id.ilike.%${query}%`)
                 .limit(1)
                 .single();
@@ -127,6 +130,31 @@ export default function CashierScreen() {
                                     wallet_balance: data.new_balance,
                                 });
                                 setAmount('');
+
+                                // --- Send Notifications ---
+                                const title = 'Wallet Update 💰';
+                                const body = `Your wallet has been credited with ${amountNum} FCFA. New balance: ${data.new_balance} FCFA`;
+                                const notifType = 'wallet_topup';
+                                const notifData = { amount: amountNum, new_balance: data.new_balance };
+
+                                // 1. Log to Database (User sees this in their "inbox" if built)
+                                await NotificationService.logNotification(
+                                    searchResult.id,
+                                    title,
+                                    body,
+                                    notifType,
+                                    notifData
+                                );
+
+                                // 2. Send Remote Push (User sees this on their lock screen)
+                                if (searchResult.push_token) {
+                                    await NotificationService.sendPushNotification(
+                                        searchResult.push_token,
+                                        title,
+                                        body,
+                                        { type: notifType, ...notifData }
+                                    );
+                                }
                             } else {
                                 Alert.alert('Error', data.error);
                             }
