@@ -16,9 +16,11 @@ import { supabase } from '../../lib/supabase';
 import { decode } from 'base64-arraybuffer';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
+import { useTheme } from '../../providers/ThemeProvider';
 
 export default function MenuScreen() {
     const { user } = useAuth();
+    const { colors } = useTheme();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner'>('lunch');
@@ -122,6 +124,8 @@ export default function MenuScreen() {
         }
     };
 
+    const styles = getStyles(colors);
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Update Daily Menu</Text>
@@ -153,14 +157,14 @@ export default function MenuScreen() {
                     <Image source={{ uri: displayImage }} style={styles.image} />
                 ) : (
                     <View style={styles.placeholder}>
-                        <Ionicons name="restaurant-outline" size={64} color="#ccc" />
+                        <Ionicons name="restaurant-outline" size={64} color={colors.textSecondary} />
                         <Text style={styles.placeholderText}>No image selected</Text>
                     </View>
                 )}
             </View>
 
             <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
-                <Ionicons name="image-outline" size={24} color="#007AFF" />
+                <Ionicons name="image-outline" size={24} color={colors.primary} />
                 <Text style={styles.pickButtonText}>Pick Image from Gallery</Text>
             </TouchableOpacity>
 
@@ -182,25 +186,27 @@ export default function MenuScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
     container: {
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: colors.background,
         flexGrow: 1,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
-        color: '#333',
+        color: colors.text,
         textAlign: 'center',
     },
     selectorContainer: {
         flexDirection: 'row',
         marginBottom: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 4,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     typeButton: {
         flex: 1,
@@ -209,32 +215,34 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     typeButtonActive: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.background,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     typeText: {
-        color: '#666',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     typeTextActive: {
-        color: '#007AFF',
+        color: colors.primary,
         fontWeight: 'bold',
     },
     previewContainer: {
         width: '100%',
         height: 250,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.card,
         borderRadius: 16,
         overflow: 'hidden',
         marginBottom: 20,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: '#eee',
+        borderColor: colors.border,
         borderStyle: 'dashed',
     },
     image: {
@@ -246,31 +254,34 @@ const styles = StyleSheet.create({
     },
     placeholderText: {
         marginTop: 10,
-        color: '#999',
+        color: colors.textSecondary,
     },
     pickButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 15,
-        backgroundColor: '#F0F8FF',
+        backgroundColor: colors.card,
         borderRadius: 12,
         marginBottom: 15,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     pickButtonText: {
         marginLeft: 10,
-        color: '#007AFF',
+        color: colors.primary,
         fontWeight: '600',
         fontSize: 16,
     },
     uploadButton: {
-        backgroundColor: '#34C759',
+        backgroundColor: colors.success,
         padding: 18,
         borderRadius: 12,
         alignItems: 'center',
     },
     uploadButtonDisabled: {
         backgroundColor: '#ccc',
+        opacity: 0.6,
     },
     uploadButtonText: {
         color: '#fff',

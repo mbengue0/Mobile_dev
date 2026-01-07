@@ -34,6 +34,7 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
   - Text: White `#FFFFFF`, Light Grey `#CCCCCC`
   - Inputs/Buttons: White backgrounds with Navy text
 - **Theme**: Consistent SaaS-ready UI with unified color scheme.
+- **Dark Mode**: Admin Panel fully supported with persistent theme toggle.
 
 ### 👥 User Roles & Access
 3. **Student**:
@@ -72,6 +73,11 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - `database/`: Schema and migrations.
 
 ## 📋 Recent Changelog
+
+### v1.0.3 - Admin Dark Mode (Jan 2025)
+- **Feature**: Dark Mode toggle in Admin Settings.
+- **Infrastructure**: Global `ThemeProvider` with AsyncStorage persistence.
+- **UI**: Dynamic Navy Blue theme for Admin screens.
 
 ### v1.0.2 - Polish & Offline Support (Jan 2025)
 - **Feature**: Global Offline Banner (`components/OfflineNotice.tsx`).

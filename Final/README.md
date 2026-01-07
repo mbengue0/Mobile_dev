@@ -6,6 +6,7 @@
 
 ### 🎨 Branding & UX
 - **Animated Splash Screen**: Premium Deep Navy design with scaling animation
+- **Dark Mode**: Full Admin Panel support (Navy Blue theme)
 - **Modern Design**: Clean coral accent (#FF4757) with intuitive navigation
 - **Responsive UI**: Keyboard-aware forms and smooth animations
 
@@ -24,7 +25,7 @@
 - **QR Scanner**: Continuous scan with time window validation (fixed race condition)
 - **Cashier System**: Search users and add wallet funds
 - **Menu Management**: Upload daily menu images to Supabase Storage
-- **Settings Screen**: Profile info, notification preferences, logout
+- **Settings Screen**: Profile info, notification preferences, Dark Mode toggle
 - **Time Validation**: Automatic meal time enforcement (configurable by super admin)
 
 ### For Super Admins

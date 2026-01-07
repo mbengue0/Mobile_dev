@@ -45,14 +45,20 @@ function AuthGuard() {
     );
 }
 
+import { ThemeProvider } from '../providers/ThemeProvider';
+
+// ... existing imports ...
+
 export default function RootLayout() {
     return (
         <QueryProvider>
             <AuthProvider>
-                <View style={{ flex: 1, backgroundColor: '#132439' }}>
-                    <OfflineNotice />
-                    <AuthGuard />
-                </View>
+                <ThemeProvider>
+                    <View style={{ flex: 1, backgroundColor: '#132439' }}>
+                        <OfflineNotice />
+                        <AuthGuard />
+                    </View>
+                </ThemeProvider>
             </AuthProvider>
         </QueryProvider>
     );

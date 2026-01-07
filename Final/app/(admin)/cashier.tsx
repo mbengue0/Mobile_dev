@@ -12,6 +12,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../providers/ThemeProvider';
 
 interface SearchResult {
     id: string;
@@ -23,6 +24,7 @@ interface SearchResult {
 
 export default function CashierScreen() {
     const { user } = useAuth();
+    const { colors } = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
     const [amount, setAmount] = useState('');
@@ -139,6 +141,8 @@ export default function CashierScreen() {
         );
     };
 
+    const styles = getStyles(colors);
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.searchSection}>
@@ -147,15 +151,16 @@ export default function CashierScreen() {
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Enter email or student ID"
+                        placeholderTextColor={colors.textSecondary}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         autoCapitalize="none"
                     />
                     <View style={styles.searchIconContainer}>
                         {searching ? (
-                            <ActivityIndicator color="#FF9500" />
+                            <ActivityIndicator color={colors.primary} />
                         ) : (
-                            <Ionicons name="search" size={24} color="#ccc" />
+                            <Ionicons name="search" size={24} color={colors.textSecondary} />
                         )}
                     </View>
                 </View>
@@ -164,7 +169,7 @@ export default function CashierScreen() {
             {searchResult && (
                 <View style={styles.resultCard}>
                     <View style={styles.resultHeader}>
-                        <Ionicons name="person-circle" size={48} color="#FF9500" />
+                        <Ionicons name="person-circle" size={48} color={colors.primary} />
                         <View style={styles.resultInfo}>
                             <Text style={styles.resultName}>{searchResult.full_name}</Text>
                             <Text style={styles.resultDetail}>{searchResult.email}</Text>
@@ -184,6 +189,7 @@ export default function CashierScreen() {
                         <TextInput
                             style={styles.amountInput}
                             placeholder="Enter amount (FCFA)"
+                            placeholderTextColor={colors.textSecondary}
                             value={amount}
                             onChangeText={setAmount}
                             keyboardType="number-pad"
@@ -223,7 +229,7 @@ export default function CashierScreen() {
 
             {!searchResult && !searching && (
                 <View style={styles.emptyState}>
-                    <Ionicons name="search-outline" size={64} color="#ccc" />
+                    <Ionicons name="search-outline" size={64} color={colors.textSecondary} />
                     <Text style={styles.emptyText}>Search for a user to begin</Text>
                 </View>
             )}
@@ -231,22 +237,22 @@ export default function CashierScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     searchSection: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 20,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: colors.border,
     },
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 15,
-        color: '#333',
+        color: colors.text,
     },
     searchContainer: {
         flexDirection: 'row',
@@ -254,10 +260,13 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
         padding: 15,
         borderRadius: 8,
         fontSize: 16,
+        color: colors.text,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     searchIconContainer: {
         width: 50,
@@ -265,7 +274,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     resultCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         margin: 20,
         padding: 20,
         borderRadius: 12,
@@ -274,6 +283,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     resultHeader: {
         flexDirection: 'row',
@@ -286,43 +297,48 @@ const styles = StyleSheet.create({
     resultName: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
         marginBottom: 5,
     },
     resultDetail: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 2,
     },
     balanceContainer: {
-        backgroundColor: '#FFF3E0',
+        backgroundColor: colors.background,
         padding: 15,
         borderRadius: 8,
         marginBottom: 20,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     balanceLabel: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 5,
     },
     balanceValue: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#FF9500',
+        color: colors.primary,
     },
     addFundsSection: {
         borderTopWidth: 1,
-        borderTopColor: '#eee',
+        borderTopColor: colors.border,
         paddingTop: 20,
     },
     amountInput: {
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
         padding: 15,
         borderRadius: 8,
         fontSize: 18,
         marginBottom: 15,
         textAlign: 'center',
+        color: colors.text,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     quickAmounts: {
         flexDirection: 'row',
@@ -333,19 +349,19 @@ const styles = StyleSheet.create({
     quickAmountButton: {
         flex: 1,
         minWidth: '45%',
-        backgroundColor: '#FFF3E0',
+        backgroundColor: colors.background,
         padding: 12,
         borderRadius: 8,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#FF9500',
+        borderColor: colors.primary,
     },
     quickAmountText: {
-        color: '#FF9500',
+        color: colors.primary,
         fontWeight: '600',
     },
     addButton: {
-        backgroundColor: '#FF9500',
+        backgroundColor: colors.primary,
         padding: 18,
         borderRadius: 8,
         alignItems: 'center',
@@ -364,7 +380,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#999',
+        color: colors.textSecondary,
         marginTop: 15,
     },
 });

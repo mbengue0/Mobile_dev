@@ -11,9 +11,11 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../providers/ThemeProvider';
 
 export default function ScannerScreen() {
     const { user } = useAuth();
+    const { colors } = useTheme();
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
     const isScanning = React.useRef(false); // Ref for synchronous locking
@@ -29,6 +31,8 @@ export default function ScannerScreen() {
         }
     }, [scanned]);
 
+    const styles = getStyles(colors);
+
     if (!permission) {
         return <View style={styles.container}><Text>Requesting camera permission...</Text></View>;
     }
@@ -36,7 +40,7 @@ export default function ScannerScreen() {
     if (!permission.granted) {
         return (
             <View style={styles.container}>
-                <Ionicons name="camera-outline" size={64} color="#ccc" />
+                <Ionicons name="camera-outline" size={64} color={colors.textSecondary} />
                 <Text style={styles.permissionText}>Camera permission required</Text>
                 <TouchableOpacity style={styles.button} onPress={requestPermission}>
                     <Text style={styles.buttonText}>Grant Permission</Text>
@@ -115,7 +119,7 @@ export default function ScannerScreen() {
                                 <Ionicons
                                     name={lastScanResult.success ? "checkmark-circle" : "close-circle"}
                                     size={64}
-                                    color={lastScanResult.success ? "#34C759" : "#FF3B30"}
+                                    color={lastScanResult.success ? colors.success : colors.danger}
                                 />
                                 <Text style={styles.modalTitle}>
                                     {lastScanResult.success ? "Success!" : "Scan Failed"}
@@ -148,15 +152,15 @@ export default function ScannerScreen() {
             <View style={styles.infoPanel}>
                 <Text style={styles.infoPanelTitle}>Meal Time Windows</Text>
                 <View style={styles.timeSlot}>
-                    <Ionicons name="sunny" size={20} color="#FF9500" />
+                    <Ionicons name="sunny" size={20} color={colors.primary} />
                     <Text style={styles.timeText}>Breakfast: 7:00 AM - 11:00 AM</Text>
                 </View>
                 <View style={styles.timeSlot}>
-                    <Ionicons name="restaurant" size={20} color="#FF9500" />
+                    <Ionicons name="restaurant" size={20} color={colors.primary} />
                     <Text style={styles.timeText}>Lunch: 12:00 PM - 3:00 PM</Text>
                 </View>
                 <View style={styles.timeSlot}>
-                    <Ionicons name="moon" size={20} color="#FF9500" />
+                    <Ionicons name="moon" size={20} color={colors.primary} />
                     <Text style={styles.timeText}>Dinner: 7:00 PM - 10:00 PM</Text>
                 </View>
             </View>
@@ -164,7 +168,7 @@ export default function ScannerScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#000',
@@ -233,7 +237,7 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     modalContent: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 30,
         borderRadius: 20,
         alignItems: 'center',
@@ -244,11 +248,11 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginTop: 15,
         marginBottom: 10,
-        color: '#333',
+        color: colors.text,
     },
     modalMessage: {
         fontSize: 16,
-        color: '#666',
+        color: colors.textSecondary,
         textAlign: 'center',
         marginBottom: 25,
     },
@@ -260,10 +264,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     buttonSuccess: {
-        backgroundColor: '#34C759',
+        backgroundColor: colors.success,
     },
     buttonError: {
-        backgroundColor: '#FF3B30',
+        backgroundColor: colors.danger,
     },
     modalButtonText: {
         color: '#fff',
@@ -282,7 +286,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     infoPanel: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 20,
         width: '100%',
     },
@@ -290,7 +294,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         marginBottom: 15,
-        color: '#333',
+        color: colors.text,
     },
     timeSlot: {
         flexDirection: 'row',
@@ -300,16 +304,16 @@ const styles = StyleSheet.create({
     timeText: {
         fontSize: 14,
         marginLeft: 10,
-        color: '#666',
+        color: colors.textSecondary,
     },
     permissionText: {
         fontSize: 16,
-        color: '#666',
+        color: colors.textSecondary,
         marginTop: 15,
         marginBottom: 20,
     },
     button: {
-        backgroundColor: '#FF9500',
+        backgroundColor: colors.primary,
         padding: 15,
         borderRadius: 8,
         paddingHorizontal: 30,

@@ -8,20 +8,22 @@ import {
     ScrollView,
     Switch,
     Modal,
+    StatusBar
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import NotificationService from '../../services/NotificationService';
+import { useTheme } from '../../providers/ThemeProvider';
 
 export default function SettingsScreen() {
     const { user, profile, signOut } = useAuth();
     const router = useRouter();
+    const { colors, isDarkMode, toggleTheme } = useTheme();
 
     const [notificationsEnabled, setNotificationsEnabled] = useState(
         profile?.notifications_enabled ?? true
     );
-    const [darkModeEnabled, setDarkModeEnabled] = useState(false);
     const [showProfileModal, setShowProfileModal] = useState(false);
 
     const handleLogout = () => {
@@ -44,33 +46,19 @@ export default function SettingsScreen() {
 
     const handleNotificationToggle = async (value: boolean) => {
         setNotificationsEnabled(value);
-
-        // Persist to database
         if (user) {
             await NotificationService.updateNotificationPreference(user.id, value);
         }
-
-        Alert.alert(
-            'Notifications',
-            value ? 'Notifications enabled' : 'Notifications disabled',
-            [{ text: 'OK' }]
-        );
     };
 
-    const handleDarkModeToggle = (value: boolean) => {
-        setDarkModeEnabled(value);
-        Alert.alert(
-            'Dark Mode',
-            'Dark mode will be available in a future update',
-            [{ text: 'OK' }]
-        );
-    };
+    const styles = getStyles(colors);
 
     return (
         <ScrollView style={styles.container}>
+            <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
             <View style={styles.profileSection}>
                 <View style={styles.avatarContainer}>
-                    <Ionicons name="person-circle" size={80} color="#FF4757" />
+                    <Ionicons name="person-circle" size={80} color={colors.primary} />
                 </View>
                 <Text style={styles.name}>{profile?.full_name || 'Admin User'}</Text>
                 <Text style={styles.email}>{user?.email}</Text>
@@ -88,9 +76,9 @@ export default function SettingsScreen() {
                     style={styles.menuItem}
                     onPress={() => setShowProfileModal(true)}
                 >
-                    <Ionicons name="person-outline" size={24} color="#666" />
+                    <Ionicons name="person-outline" size={24} color={colors.textSecondary} />
                     <Text style={styles.menuText}>Profile Information</Text>
-                    <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                    <Ionicons name="chevron-forward" size={24} color={colors.border} />
                 </TouchableOpacity>
 
                 {profile?.role === 'super_admin' && (
@@ -98,9 +86,9 @@ export default function SettingsScreen() {
                         style={styles.menuItem}
                         onPress={() => router.push('/(super_admin)/users')}
                     >
-                        <Ionicons name="shield-checkmark-outline" size={24} color="#666" />
+                        <Ionicons name="shield-checkmark-outline" size={24} color={colors.textSecondary} />
                         <Text style={styles.menuText}>Super Admin Dashboard</Text>
-                        <Ionicons name="chevron-forward" size={24} color="#ccc" />
+                        <Ionicons name="chevron-forward" size={24} color={colors.border} />
                     </TouchableOpacity>
                 )}
             </View>
@@ -109,23 +97,23 @@ export default function SettingsScreen() {
                 <Text style={styles.sectionTitle}>Preferences</Text>
 
                 <View style={styles.menuItem}>
-                    <Ionicons name="notifications-outline" size={24} color="#666" />
+                    <Ionicons name="notifications-outline" size={24} color={colors.textSecondary} />
                     <Text style={styles.menuText}>Notifications</Text>
                     <Switch
                         value={notificationsEnabled}
                         onValueChange={handleNotificationToggle}
-                        trackColor={{ false: '#ccc', true: '#FF4757' }}
+                        trackColor={{ false: '#ccc', true: colors.primary }}
                         thumbColor="#fff"
                     />
                 </View>
 
                 <View style={styles.menuItem}>
-                    <Ionicons name="moon-outline" size={24} color="#666" />
+                    <Ionicons name="moon-outline" size={24} color={colors.textSecondary} />
                     <Text style={styles.menuText}>Dark Mode</Text>
                     <Switch
-                        value={darkModeEnabled}
-                        onValueChange={handleDarkModeToggle}
-                        trackColor={{ false: '#ccc', true: '#FF4757' }}
+                        value={isDarkMode}
+                        onValueChange={toggleTheme}
+                        trackColor={{ false: '#ccc', true: colors.primary }}
                         thumbColor="#fff"
                     />
                 </View>
@@ -139,7 +127,7 @@ export default function SettingsScreen() {
                 <Text style={styles.logoutText}>Logout</Text>
             </TouchableOpacity>
 
-            <Text style={styles.version}>UniTicket v1.0.0</Text>
+            <Text style={styles.version}>Kanteen v1.0.2</Text>
 
             {/* Profile Information Modal */}
             <Modal
@@ -153,34 +141,24 @@ export default function SettingsScreen() {
                         <View style={styles.modalHeader}>
                             <Text style={styles.modalTitle}>Profile Information</Text>
                             <TouchableOpacity onPress={() => setShowProfileModal(false)}>
-                                <Ionicons name="close" size={28} color="#333" />
+                                <Ionicons name="close" size={28} color={colors.text} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.profileInfo}>
-                            <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>Full Name</Text>
-                                <Text style={styles.infoValue}>{profile?.full_name || 'N/A'}</Text>
-                            </View>
-
-                            <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>Email</Text>
-                                <Text style={styles.infoValue}>{user?.email}</Text>
-                            </View>
-
-                            <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>Role</Text>
-                                <Text style={styles.infoValue}>
-                                    {profile?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-                                </Text>
-                            </View>
-
-                            <View style={styles.infoRow}>
-                                <Text style={styles.infoLabel}>User ID</Text>
-                                <Text style={[styles.infoValue, styles.monospace]}>
-                                    {user?.id?.substring(0, 8)}...
-                                </Text>
-                            </View>
+                            <InfoRow label="Full Name" value={profile?.full_name || 'N/A'} colors={colors} />
+                            <InfoRow label="Email" value={user?.email} colors={colors} />
+                            <InfoRow
+                                label="Role"
+                                value={profile?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                                colors={colors}
+                            />
+                            <InfoRow
+                                label="User ID"
+                                value={`${user?.id?.substring(0, 8)}...`}
+                                colors={colors}
+                                monospace
+                            />
                         </View>
 
                         <TouchableOpacity
@@ -196,17 +174,28 @@ export default function SettingsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+const InfoRow = ({ label, value, colors, monospace }: any) => (
+    <View style={[stylesRaw.infoRow, { borderBottomColor: colors.border }]}>
+        <Text style={[stylesRaw.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
+        <Text style={[
+            stylesRaw.infoValue,
+            { color: colors.text },
+            monospace && stylesRaw.monospace
+        ]}>{value}</Text>
+    </View>
+);
+
+const getStyles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     profileSection: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 30,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: colors.border,
     },
     avatarContainer: {
         marginBottom: 15,
@@ -214,16 +203,16 @@ const styles = StyleSheet.create({
     name: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
         marginBottom: 5,
     },
     email: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 10,
     },
     roleBadge: {
-        backgroundColor: '#FF4757',
+        backgroundColor: colors.primary,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 12,
@@ -234,40 +223,40 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     section: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         marginTop: 20,
         borderTopWidth: 1,
         borderBottomWidth: 1,
-        borderColor: '#eee',
+        borderColor: colors.border,
     },
     sectionTitle: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#666',
+        color: colors.textSecondary,
         paddingHorizontal: 15,
         paddingVertical: 10,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
         textTransform: 'uppercase',
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: colors.border,
     },
     menuText: {
         flex: 1,
         fontSize: 16,
-        color: '#333',
+        color: colors.text,
         marginLeft: 15,
     },
     logoutButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FF3B30',
+        backgroundColor: colors.danger,
         margin: 20,
         padding: 15,
         borderRadius: 12,
@@ -280,7 +269,7 @@ const styles = StyleSheet.create({
     },
     version: {
         textAlign: 'center',
-        color: '#999',
+        color: colors.textSecondary,
         fontSize: 12,
         marginBottom: 30,
     },
@@ -290,7 +279,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         paddingTop: 20,
@@ -305,37 +294,18 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         paddingBottom: 15,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: colors.border,
     },
     modalTitle: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
     },
     profileInfo: {
         marginTop: 10,
     },
-    infoRow: {
-        paddingVertical: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
-    },
-    infoLabel: {
-        fontSize: 13,
-        color: '#666',
-        marginBottom: 5,
-        textTransform: 'uppercase',
-        fontWeight: '600',
-    },
-    infoValue: {
-        fontSize: 16,
-        color: '#333',
-    },
-    monospace: {
-        fontFamily: 'monospace',
-    },
     closeButton: {
-        backgroundColor: '#FF4757',
+        backgroundColor: colors.primary,
         padding: 15,
         borderRadius: 12,
         alignItems: 'center',
@@ -345,5 +315,24 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+});
+
+const stylesRaw = StyleSheet.create({
+    infoRow: {
+        paddingVertical: 15,
+        borderBottomWidth: 1,
+    },
+    infoLabel: {
+        fontSize: 13,
+        marginBottom: 5,
+        textTransform: 'uppercase',
+        fontWeight: '600',
+    },
+    infoValue: {
+        fontSize: 16,
+    },
+    monospace: {
+        fontFamily: 'monospace',
     },
 });
