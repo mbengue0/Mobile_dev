@@ -10,7 +10,8 @@
 - **Responsive UI**: Keyboard-aware forms and smooth animations
 
 ### For Students
-- **Digital Wallet**: View balance and transaction history
+- **Digital Wallet**: View balance and transaction history (Deposits/Purchases)
+- **Profile Management**: Dedicated screen for user details and safe logout
 - **Batch Ticket Purchase**: Buy multiple tickets at once (up to 10)
 - **QR Tickets**: Display QR codes for active tickets
 - **Menu Display**: View daily menu images with fallback to recent menus
@@ -50,6 +51,7 @@
 - **State Management**: @tanstack/react-query v5
 - **Offline Support**: AsyncStorage + React Query Persist
 - **Navigation**: Expo Router v6
+- **Connectivity**: @react-native-community/netinfo
 - **Notifications**: expo-notifications ~0.29.9
 - **Animations**: lottie-react-native ^7.2.0, react-native-reanimated ~3.16.1
 - **Camera**: expo-camera ~17.0.10

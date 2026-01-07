@@ -15,9 +15,10 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - **Backend**: Supabase (PostgreSQL, Auth, Realtime)
 - **Navigation**: Expo Router v6
 - **State Management**: @tanstack/react-query v5
-- **Offline Support**: AsyncStorage + React Query Persist
+- **Offline Support**: AsyncStorage + React Query Persist + NetInfo
 - **Notifications**: expo-notifications ~0.29.9
 - **Animations**: lottie-react-native ^7.2.0
+- **Config**: app.json with Config Plugins (Camera, Notifications)
 
 ## ✅ Core Features (Implemented)
 
@@ -25,6 +26,7 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - **Identity**: "Kanteen" (formerly UniTicket/DAUST Cafeteria)
 - **Assets**: Custom "QR + Cutlery" vector logo deployed (App Icon, Adaptive Icon).
 - **Splash Screen**: Premium Deep Navy (#132439) with Gold accents. Scaling animation.
+- **Offline Banner**: Global red status bar indicator when internet connection is lost.
 - **Auth Screens**: Unified Navy Blue theme, clean typography, and logo integration.
 - **Color Palette**: 
   - Primary: Deep Navy Blue `#132439`
@@ -69,6 +71,12 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - `database/`: Schema and migrations.
 
 ## 📋 Recent Changelog
+
+### v1.0.2 - Polish & Offline Support (Jan 2025)
+- **Feature**: Global Offline Banner (`components/OfflineNotice.tsx`).
+- **Feature**: Student Transaction History & Profile Screen.
+- **UX**: Immersive Navy Blue Splash Screen & Icons.
+- **Config**: Production-ready `app.json` (Deep Links, Permissions).
 
 ### v1.0.0 - Kanteen Reboot (Jan 2025)
 - **Rebrand**: Project renamed to **Kanteen** (formerly UniTicket).
