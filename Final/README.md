@@ -108,7 +108,8 @@ Final/
 │   │   ├── login.tsx
 │   │   └── signup.tsx
 │   ├── (student)/           # Student features
-│   │   ├── index.tsx        # Wallet dashboard
+│   │   ├── index.tsx        # Wallet dashboard & Transactions
+│   │   ├── profile.tsx      # User profile & Logout
 │   │   ├── tickets.tsx      # My tickets with QR
 │   │   └── purchase.tsx     # Buy tickets
 │   ├── (admin)/             # Admin features

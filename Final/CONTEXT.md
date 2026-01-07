@@ -36,8 +36,9 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - **Theme**: Consistent SaaS-ready UI with unified color scheme.
 
 ### 👥 User Roles & Access
-1. **Student**:
-   - Digital Wallet (Balance, Transactions)
+3. **Student**:
+   - Digital Wallet (Balance, Transactions History)
+   - Profile Management (View details, Logout)
    - Batch Ticket Purchase (Up to 10)
    - QR Ticket Generation
    - Menu Viewing (Image-based with fallback)
