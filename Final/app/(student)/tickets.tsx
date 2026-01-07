@@ -12,6 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../providers/ThemeProvider';
 
 interface Ticket {
     id: string;
@@ -27,6 +28,7 @@ interface Ticket {
 
 export default function TicketsScreen() {
     const { user } = useAuth();
+    const { colors } = useTheme();
 
     const { data: tickets, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['tickets', user?.id],
@@ -46,13 +48,13 @@ export default function TicketsScreen() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'active':
-                return '#34C759';
+                return colors.success;
             case 'used':
-                return '#8E8E93';
+                return colors.textSecondary;
             case 'expired':
-                return '#FF3B30';
+                return colors.danger;
             default:
-                return '#8E8E93';
+                return colors.textSecondary;
         }
     };
 
@@ -80,79 +82,81 @@ export default function TicketsScreen() {
     };
 
     const renderTicket = ({ item }: { item: Ticket }) => (
-        <View style={styles.ticketCard}>
-            <View style={styles.ticketHeader}>
-                <View style={styles.ticketInfo}>
-                    <View style={styles.mealTypeRow}>
+        <View style={styles(colors).ticketCard}>
+            <View style={styles(colors).ticketHeader}>
+                <View style={styles(colors).ticketInfo}>
+                    <View style={styles(colors).mealTypeRow}>
                         <Ionicons
                             name={getMealIcon(item.meal_type)}
                             size={20}
-                            color="#007AFF"
+                            color={colors.primary}
                         />
-                        <Text style={styles.mealType}>
+                        <Text style={styles(colors).mealType}>
                             {item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1)}
                         </Text>
                     </View>
-                    <Text style={styles.ticketNumber}>{item.ticket_number}</Text>
-                    <Text style={styles.date}>
+                    <Text style={styles(colors).ticketNumber}>{item.ticket_number}</Text>
+                    <Text style={styles(colors).date}>
                         {new Date(item.meal_date).toLocaleDateString()}
                     </Text>
                 </View>
                 <View
                     style={[
-                        styles.statusBadge,
+                        styles(colors).statusBadge,
                         { backgroundColor: getStatusColor(item.status) },
                     ]}
                 >
-                    <Text style={styles.statusText}>
+                    <Text style={styles(colors).statusText}>
                         {item.status.toUpperCase()}
                     </Text>
                 </View>
             </View>
 
             {item.status === 'active' && (
-                <View style={styles.qrContainer}>
+                <View style={styles(colors).qrContainer}>
                     {visibleQR === item.id ? (
                         <TouchableOpacity onPress={() => toggleQR(item.id)}>
-                            <QRCode value={item.qr_code_data} size={150} />
-                            <Text style={styles.qrHint}>Tap to hide</Text>
+                            <View style={styles(colors).qrWrapper}>
+                                <QRCode value={item.qr_code_data} size={150} backgroundColor="white" />
+                            </View>
+                            <Text style={styles(colors).qrHint}>Tap to hide</Text>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
-                            style={styles.showQrButton}
+                            style={styles(colors).showQrButton}
                             onPress={() => toggleQR(item.id)}
                         >
-                            <Ionicons name="qr-code" size={24} color="#007AFF" />
-                            <Text style={styles.showQrText}>Show QR Code</Text>
+                            <Ionicons name="qr-code" size={24} color={colors.primary} />
+                            <Text style={styles(colors).showQrText}>Show QR Code</Text>
                         </TouchableOpacity>
                     )}
                 </View>
             )}
 
             {item.status === 'used' && item.used_at && (
-                <Text style={styles.usedText}>
+                <Text style={styles(colors).usedText}>
                     Used on {new Date(item.used_at).toLocaleString()}
                 </Text>
             )}
 
-            <Text style={styles.price}>{item.price} FCFA</Text>
+            <Text style={styles(colors).price}>{item.price} FCFA</Text>
         </View>
     );
 
     if (isLoading) {
         return (
-            <View style={styles.centerContainer}>
-                <Text>Loading tickets...</Text>
+            <View style={styles(colors).centerContainer}>
+                <Text style={{ color: colors.text }}>Loading tickets...</Text>
             </View>
         );
     }
 
     if (!tickets || tickets.length === 0) {
         return (
-            <View style={styles.centerContainer}>
-                <Ionicons name="ticket-outline" size={64} color="#ccc" />
-                <Text style={styles.emptyText}>No tickets yet</Text>
-                <Text style={styles.emptySubtext}>
+            <View style={styles(colors).centerContainer}>
+                <Ionicons name="ticket-outline" size={64} color={colors.textSecondary} />
+                <Text style={styles(colors).emptyText}>No tickets yet</Text>
+                <Text style={styles(colors).emptySubtext}>
                     Purchase tickets from the Buy Tickets tab
                 </Text>
             </View>
@@ -160,36 +164,37 @@ export default function TicketsScreen() {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={styles(colors).container}>
             <FlatList
                 data={tickets}
                 renderItem={renderTicket}
                 keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.listContent}
+                contentContainerStyle={styles(colors).listContent}
                 refreshControl={
-                    <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+                    <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
                 }
             />
         </View>
     );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     centerContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        backgroundColor: colors.background,
     },
     listContent: {
         padding: 15,
     },
     ticketCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 15,
         marginBottom: 15,
@@ -198,6 +203,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     ticketHeader: {
         flexDirection: 'row',
@@ -216,16 +223,16 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         marginLeft: 8,
-        color: '#333',
+        color: colors.text,
     },
     ticketNumber: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
         marginBottom: 3,
     },
     date: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
     },
     statusBadge: {
         paddingHorizontal: 12,
@@ -242,53 +249,60 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 20,
         borderTopWidth: 1,
-        borderTopColor: '#eee',
+        borderTopColor: colors.border,
         borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        borderBottomColor: colors.border,
         marginBottom: 15,
         minHeight: 150,
         justifyContent: 'center',
     },
+    qrWrapper: {
+        padding: 10,
+        backgroundColor: '#fff', // QR needs high contrast
+        borderRadius: 8,
+    },
     qrHint: {
         marginTop: 10,
         fontSize: 12,
-        color: '#666',
+        color: colors.textSecondary,
         textAlign: 'center',
     },
     showQrButton: {
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
-        backgroundColor: '#F0F8FF',
+        backgroundColor: colors.background,
         borderRadius: 12,
         width: '100%',
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     showQrText: {
         marginTop: 8,
-        color: '#007AFF',
+        color: colors.primary,
         fontWeight: '600',
     },
     usedText: {
         fontSize: 12,
-        color: '#666',
+        color: colors.textSecondary,
         fontStyle: 'italic',
         marginBottom: 10,
     },
     price: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#007AFF',
+        color: colors.primary,
         textAlign: 'right',
     },
     emptyText: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#666',
+        color: colors.textSecondary,
         marginTop: 15,
     },
     emptySubtext: {
         fontSize: 14,
-        color: '#999',
+        color: colors.textSecondary,
         marginTop: 5,
         textAlign: 'center',
     },

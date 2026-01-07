@@ -17,6 +17,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useTheme } from '../../providers/ThemeProvider';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner';
 
@@ -40,6 +41,7 @@ export default function PurchaseScreen() {
     const queryClient = useQueryClient();
     const router = useRouter();
     const { sendNotification } = useNotifications();
+    const { colors } = useTheme();
 
     // Fetch dynamic system settings (prices and times)
     const { data: systemSettings, isLoading: settingsLoading } = useQuery({
@@ -242,28 +244,28 @@ export default function PurchaseScreen() {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={styles(colors).container}
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
             }
         >
-            <View style={styles.walletInfo}>
-                <Text style={styles.walletLabel}>Available Balance</Text>
-                <Text style={styles.walletBalance}>{profile?.wallet_balance || 0} FCFA</Text>
+            <View style={styles(colors).walletInfo}>
+                <Text style={styles(colors).walletLabel}>Available Balance</Text>
+                <Text style={styles(colors).walletBalance}>{profile?.wallet_balance || 0} FCFA</Text>
             </View>
 
             {menuImage?.image_url && (
-                <View style={styles.menuPreview}>
-                    <Text style={styles.menuTitle}>Today's {selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}</Text>
+                <View style={styles(colors).menuPreview}>
+                    <Text style={styles(colors).menuTitle}>Today's {selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}</Text>
                     {imageError ? (
-                        <View style={[styles.menuImage, styles.errorContainer]}>
-                            <Ionicons name="image-outline" size={48} color="#999" />
-                            <Text style={styles.errorText}>Could not load image</Text>
+                        <View style={[styles(colors).menuImage, styles(colors).errorContainer]}>
+                            <Ionicons name="image-outline" size={48} color={colors.textSecondary} />
+                            <Text style={styles(colors).errorText}>Could not load image</Text>
                         </View>
                     ) : (
                         <Image
                             source={{ uri: menuImage.image_url }}
-                            style={styles.menuImage}
+                            style={styles(colors).menuImage}
                             resizeMode="cover"
                             onError={() => setImageError(true)}
                         />
@@ -271,88 +273,89 @@ export default function PurchaseScreen() {
                 </View>
             )}
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Select Meal Type</Text>
+            <View style={styles(colors).section}>
+                <Text style={styles(colors).sectionTitle}>Select Meal Type</Text>
                 {meals.map((meal) => (
                     <TouchableOpacity
                         key={meal}
                         style={[
-                            styles.mealCard,
-                            selectedMeal === meal && styles.mealCardSelected,
+                            styles(colors).mealCard,
+                            selectedMeal === meal && styles(colors).mealCardSelected,
                         ]}
                         onPress={() => setSelectedMeal(meal)}
                     >
-                        <View style={styles.mealInfo}>
+                        <View style={styles(colors).mealInfo}>
                             <Ionicons
                                 name={getMealIcon(meal)}
                                 size={32}
-                                color={selectedMeal === meal ? '#007AFF' : '#666'}
+                                color={selectedMeal === meal ? colors.primary : colors.textSecondary}
                             />
-                            <View style={styles.mealText}>
+                            <View style={styles(colors).mealText}>
                                 <Text
                                     style={[
-                                        styles.mealName,
-                                        selectedMeal === meal && styles.mealNameSelected,
+                                        styles(colors).mealName,
+                                        selectedMeal === meal && styles(colors).mealNameSelected,
                                     ]}
                                 >
                                     {meal.charAt(0).toUpperCase() + meal.slice(1)} ({systemSettings?.mealPrices?.[meal] || 0} FCFA)
                                 </Text>
-                                <Text style={styles.mealTime}>{getMealTime(meal)}</Text>
+                                <Text style={styles(colors).mealTime}>{getMealTime(meal)}</Text>
                             </View>
                         </View>
                         {selectedMeal === meal && (
-                            <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
+                            <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
                         )}
                     </TouchableOpacity>
                 ))}
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Quantity</Text>
-                <View style={styles.quantityContainer}>
+            <View style={styles(colors).section}>
+                <Text style={styles(colors).sectionTitle}>Quantity</Text>
+                <View style={styles(colors).quantityContainer}>
                     <TouchableOpacity
-                        style={styles.quantityButton}
+                        style={styles(colors).quantityButton}
                         onPress={() => {
                             const current = parseInt(quantity) || 1;
                             if (current > 1) setQuantity(String(current - 1));
                         }}
                     >
-                        <Ionicons name="remove" size={24} color="#007AFF" />
+                        <Ionicons name="remove" size={24} color={colors.primary} />
                     </TouchableOpacity>
 
                     <TextInput
-                        style={styles.quantityInput}
+                        style={styles(colors).quantityInput}
                         value={quantity}
                         onChangeText={setQuantity}
                         keyboardType="number-pad"
                         maxLength={2}
+                        placeholderTextColor={colors.textSecondary}
                     />
 
                     <TouchableOpacity
-                        style={styles.quantityButton}
+                        style={styles(colors).quantityButton}
                         onPress={() => {
                             const current = parseInt(quantity) || 1;
                             if (current < 10) setQuantity(String(current + 1));
                         }}
                     >
-                        <Ionicons name="add" size={24} color="#007AFF" />
+                        <Ionicons name="add" size={24} color={colors.primary} />
                     </TouchableOpacity>
                 </View>
-                <Text style={styles.hint}>Maximum 10 tickets per purchase</Text>
+                <Text style={styles(colors).hint}>Maximum 10 tickets per purchase</Text>
             </View>
 
-            <View style={styles.summary}>
-                <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Price per ticket:</Text>
-                    <Text style={styles.summaryValue}>{currentPrice} FCFA</Text>
+            <View style={styles(colors).summary}>
+                <View style={styles(colors).summaryRow}>
+                    <Text style={styles(colors).summaryLabel}>Price per ticket:</Text>
+                    <Text style={styles(colors).summaryValue}>{currentPrice} FCFA</Text>
                 </View>
-                <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Quantity:</Text>
-                    <Text style={styles.summaryValue}>{quantity}</Text>
+                <View style={styles(colors).summaryRow}>
+                    <Text style={styles(colors).summaryLabel}>Quantity:</Text>
+                    <Text style={styles(colors).summaryValue}>{quantity}</Text>
                 </View>
-                <View style={[styles.summaryRow, styles.totalRow]}>
-                    <Text style={styles.totalLabel}>Total:</Text>
-                    <Text style={styles.totalValue}>
+                <View style={[styles(colors).summaryRow, styles(colors).totalRow]}>
+                    <Text style={styles(colors).totalLabel}>Total:</Text>
+                    <Text style={styles(colors).totalValue}>
                         {(parseInt(quantity) || 0) * currentPrice} FCFA
                     </Text>
                 </View>
@@ -360,8 +363,8 @@ export default function PurchaseScreen() {
 
             <TouchableOpacity
                 style={[
-                    styles.purchaseButton,
-                    purchaseMutation.isPending && styles.purchaseButtonDisabled,
+                    styles(colors).purchaseButton,
+                    purchaseMutation.isPending && styles(colors).purchaseButtonDisabled,
                 ]}
                 onPress={handlePurchase}
                 disabled={purchaseMutation.isPending}
@@ -369,20 +372,20 @@ export default function PurchaseScreen() {
                 {purchaseMutation.isPending ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text style={styles.purchaseButtonText}>Purchase Tickets</Text>
+                    <Text style={styles(colors).purchaseButtonText}>Purchase Tickets</Text>
                 )}
             </TouchableOpacity>
         </ScrollView>
     );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     walletInfo: {
-        backgroundColor: '#007AFF',
+        backgroundColor: colors.primary,
         padding: 20,
         alignItems: 'center',
     },
@@ -398,7 +401,7 @@ const styles = StyleSheet.create({
         marginTop: 5,
     },
     menuPreview: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         marginHorizontal: 20,
         marginTop: 20,
         borderRadius: 12,
@@ -408,27 +411,29 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     menuTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
         padding: 12,
-        backgroundColor: '#F0F8FF',
+        backgroundColor: colors.background,
         textAlign: 'center',
     },
     menuImage: {
         width: '100%',
         height: 200,
-        backgroundColor: '#eee',
+        backgroundColor: colors.border,
     },
     errorContainer: {
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
+        backgroundColor: colors.background,
     },
     errorText: {
-        color: '#999',
+        color: colors.textSecondary,
         marginTop: 8,
     },
     section: {
@@ -438,10 +443,10 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 15,
-        color: '#333',
+        color: colors.text,
     },
     mealCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 15,
         borderRadius: 12,
         marginBottom: 12,
@@ -452,8 +457,8 @@ const styles = StyleSheet.create({
         borderColor: 'transparent',
     },
     mealCardSelected: {
-        borderColor: '#007AFF',
-        backgroundColor: '#F0F8FF',
+        borderColor: colors.primary,
+        backgroundColor: colors.background,
     },
     mealInfo: {
         flexDirection: 'row',
@@ -465,31 +470,35 @@ const styles = StyleSheet.create({
     mealName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#333',
+        color: colors.text,
     },
     mealNameSelected: {
-        color: '#007AFF',
+        color: colors.primary,
     },
     mealTime: {
         fontSize: 12,
-        color: '#666',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     quantityContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 10,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     quantityButton: {
         width: 50,
         height: 50,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#F0F8FF',
+        backgroundColor: colors.background,
         borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     quantityInput: {
         fontSize: 24,
@@ -497,19 +506,22 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginHorizontal: 30,
         minWidth: 60,
+        color: colors.text,
     },
     hint: {
         fontSize: 12,
-        color: '#666',
+        color: colors.textSecondary,
         textAlign: 'center',
         marginTop: 10,
     },
     summary: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         margin: 20,
         marginTop: 0,
         padding: 20,
         borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     summaryRow: {
         flexDirection: 'row',
@@ -518,31 +530,31 @@ const styles = StyleSheet.create({
     },
     summaryLabel: {
         fontSize: 14,
-        color: '#666',
+        color: colors.textSecondary,
     },
     summaryValue: {
         fontSize: 14,
-        color: '#333',
+        color: colors.text,
         fontWeight: '500',
     },
     totalRow: {
         borderTopWidth: 1,
-        borderTopColor: '#eee',
+        borderTopColor: colors.border,
         paddingTop: 10,
         marginTop: 5,
     },
     totalLabel: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#333',
+        color: colors.text,
     },
     totalValue: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#007AFF',
+        color: colors.primary,
     },
     purchaseButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: colors.primary,
         margin: 20,
         marginTop: 0,
         padding: 18,

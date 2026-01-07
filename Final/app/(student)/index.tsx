@@ -12,6 +12,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
+import { useTheme } from '../../providers/ThemeProvider';
 
 interface Transaction {
     id: string;
@@ -24,6 +25,7 @@ interface Transaction {
 export default function StudentDashboard() {
     const { profile, refreshProfile } = useAuth();
     const router = useRouter();
+    const { colors } = useTheme();
     const [refreshing, setRefreshing] = React.useState(false);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loadingTransactions, setLoadingTransactions] = useState(true);
@@ -63,8 +65,8 @@ export default function StudentDashboard() {
 
     if (!profile) {
         return (
-            <View style={styles.container}>
-                <ActivityIndicator size="large" color="#007AFF" />
+            <View style={styles(colors).container}>
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
     }
@@ -76,16 +78,16 @@ export default function StudentDashboard() {
 
     return (
         <ScrollView
-            style={styles.container}
+            style={styles(colors).container}
             refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
             }
         >
-            <View style={styles.header}>
-                <View style={styles.headerTop}>
+            <View style={styles(colors).header}>
+                <View style={styles(colors).headerTop}>
                     <View>
-                        <Text style={styles.greeting}>Welcome, {profile.full_name?.split(' ')[0]}!</Text>
-                        <Text style={styles.studentId}>ID: {profile.student_id}</Text>
+                        <Text style={styles(colors).greeting}>Welcome, {profile.full_name?.split(' ')[0]}!</Text>
+                        <Text style={styles(colors).studentId}>ID: {profile.student_id}</Text>
                     </View>
                     <TouchableOpacity onPress={() => router.push('/(student)/profile')}>
                         <Ionicons name="person-circle" size={40} color="#fff" />
@@ -93,63 +95,63 @@ export default function StudentDashboard() {
                 </View>
             </View>
 
-            <View style={styles.walletCard}>
-                <View style={styles.walletHeader}>
-                    <Ionicons name="wallet" size={32} color="#007AFF" />
-                    <Text style={styles.walletLabel}>Wallet Balance</Text>
+            <View style={styles(colors).walletCard}>
+                <View style={styles(colors).walletHeader}>
+                    <Ionicons name="wallet" size={32} color={colors.primary} />
+                    <Text style={styles(colors).walletLabel}>Wallet Balance</Text>
                 </View>
-                <Text style={styles.balance}>{profile.wallet_balance.toLocaleString()} FCFA</Text>
+                <Text style={styles(colors).balance}>{profile.wallet_balance.toLocaleString()} FCFA</Text>
             </View>
 
-            <View style={styles.quickActions}>
-                <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <View style={styles(colors).quickActions}>
+                <Text style={styles(colors).sectionTitle}>Quick Actions</Text>
 
-                <View style={styles.actionRow}>
+                <View style={styles(colors).actionRow}>
                     <TouchableOpacity
-                        style={styles.actionCard}
+                        style={styles(colors).actionCard}
                         onPress={() => router.push('/(student)/purchase')}
                     >
-                        <Ionicons name="cart" size={28} color="#007AFF" />
-                        <Text style={styles.actionText}>Buy Tickets</Text>
+                        <Ionicons name="cart" size={28} color={colors.primary} />
+                        <Text style={styles(colors).actionText}>Buy Tickets</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={styles.actionCard}
+                        style={styles(colors).actionCard}
                         onPress={() => router.push('/(student)/tickets')}
                     >
-                        <Ionicons name="ticket" size={28} color="#007AFF" />
-                        <Text style={styles.actionText}>My Tickets</Text>
+                        <Ionicons name="ticket" size={28} color={colors.primary} />
+                        <Text style={styles(colors).actionText}>My Tickets</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
-            <View style={styles.transactionsSection}>
-                <Text style={styles.sectionTitle}>Recent Activity</Text>
+            <View style={styles(colors).transactionsSection}>
+                <Text style={styles(colors).sectionTitle}>Recent Activity</Text>
 
                 {loadingTransactions ? (
-                    <ActivityIndicator size="small" color="#666" />
+                    <ActivityIndicator size="small" color={colors.textSecondary} />
                 ) : transactions.length === 0 ? (
-                    <Text style={styles.emptyText}>No recent transactions</Text>
+                    <Text style={styles(colors).emptyText}>No recent transactions</Text>
                 ) : (
                     transactions.map((tx) => (
-                        <View key={tx.id} style={styles.transactionItem}>
+                        <View key={tx.id} style={styles(colors).transactionItem}>
                             <View style={[
-                                styles.iconContainer,
-                                { backgroundColor: tx.transaction_type === 'deposit' ? '#E8F5E9' : '#FFEBEE' }
+                                styles(colors).iconContainer,
+                                { backgroundColor: tx.transaction_type === 'deposit' ? colors.success + '20' : colors.danger + '20' }
                             ]}>
                                 <Ionicons
                                     name={tx.transaction_type === 'deposit' ? 'arrow-up' : 'arrow-down'}
                                     size={20}
-                                    color={tx.transaction_type === 'deposit' ? '#4CAF50' : '#F44336'}
+                                    color={tx.transaction_type === 'deposit' ? colors.success : colors.danger}
                                 />
                             </View>
-                            <View style={styles.txDetails}>
-                                <Text style={styles.txDescription}>{tx.description}</Text>
-                                <Text style={styles.txDate}>{formatDate(tx.created_at)}</Text>
+                            <View style={styles(colors).txDetails}>
+                                <Text style={styles(colors).txDescription}>{tx.description}</Text>
+                                <Text style={styles(colors).txDate}>{formatDate(tx.created_at)}</Text>
                             </View>
                             <Text style={[
-                                styles.txAmount,
-                                { color: tx.transaction_type === 'deposit' ? '#4CAF50' : '#F44336' }
+                                styles(colors).txAmount,
+                                { color: tx.transaction_type === 'deposit' ? colors.success : colors.danger }
                             ]}>
                                 {tx.transaction_type === 'deposit' ? '+' : ''}{tx.amount} FCFA
                             </Text>
@@ -161,13 +163,13 @@ export default function StudentDashboard() {
     );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background,
     },
     header: {
-        backgroundColor: '#007AFF',
+        backgroundColor: colors.primary,
         padding: 20,
         paddingTop: 50,
         paddingBottom: 30,
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
         opacity: 0.9,
     },
     walletCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         marginHorizontal: 20,
         marginTop: -20,
         padding: 20,
@@ -200,6 +202,8 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 5,
         marginBottom: 25,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     walletHeader: {
         flexDirection: 'row',
@@ -208,14 +212,14 @@ const styles = StyleSheet.create({
     },
     walletLabel: {
         fontSize: 16,
-        color: '#666',
+        color: colors.textSecondary,
         marginLeft: 10,
         fontWeight: '500',
     },
     balance: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#132439',
+        color: colors.text,
     },
     quickActions: {
         paddingHorizontal: 20,
@@ -225,7 +229,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         marginBottom: 15,
-        color: '#333',
+        color: colors.text,
     },
     actionRow: {
         flexDirection: 'row',
@@ -233,7 +237,7 @@ const styles = StyleSheet.create({
         gap: 15,
     },
     actionCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 20,
         borderRadius: 12,
         alignItems: 'center',
@@ -243,11 +247,13 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     actionText: {
         fontSize: 14,
         marginTop: 10,
-        color: '#333',
+        color: colors.text,
         fontWeight: '600',
     },
     transactionsSection: {
@@ -255,12 +261,14 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
     },
     transactionItem: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         padding: 15,
         borderRadius: 12,
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     iconContainer: {
         width: 40,
@@ -276,19 +284,19 @@ const styles = StyleSheet.create({
     txDescription: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#333',
+        color: colors.text,
         marginBottom: 4,
     },
     txDate: {
         fontSize: 12,
-        color: '#999',
+        color: colors.textSecondary,
     },
     txAmount: {
         fontSize: 15,
         fontWeight: 'bold',
     },
     emptyText: {
-        color: '#999',
+        color: colors.textSecondary,
         fontStyle: 'italic',
         textAlign: 'center',
         marginTop: 10,

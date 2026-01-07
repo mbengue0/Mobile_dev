@@ -189,3 +189,31 @@
     - Created `components/OfflineNotice.tsx` using `@react-native-community/netinfo`.
     - Integrated `OfflineNotice` into `app/_layout.tsx` for global visibility.
 
+
+## 27. Admin Dark Mode Implementation
+**Action:** Implemented persistent Dark Mode for Admin interface.
+**Changes:**
+- **Infrastructure:**
+    - Created `providers/ThemeProvider.tsx` with light/dark palettes and `AsyncStorage` persistence.
+    - Integrated theme context into `app/_layout.tsx`.
+- **Admin Screens:**
+    - Refactored `app/(admin)/settings.tsx`: Added Dark Mode toggle switch.
+    - Refactored `app/(admin)/cashier.tsx`, `menu.tsx`, `scanner.tsx` to consume `useTheme`.
+- **Palette:** Navy Blue (`#132439`) background, Lighter Navy (`#1e3a5f`) cards, Gold (`#FFD700`) accents.
+
+## 28. Remote Push Notifications
+**Action:** Implemented "Client-Initiated" remote push notifications.
+**Changes:**
+- **Service Layer:**
+    - Updated `services/NotificationService.ts`: Added `sendPushNotification(token, title, body, data)` method hitting Expo Push API.
+- **Integration:**
+    - Updated `app/(admin)/cashier.tsx`: Fetches student `push_token` during search and triggers `sendPushNotification` on successful top-up.
+
+## 29. Student Dark Mode Implementation
+**Action:** Extended Dark Mode to all Student-facing screens.
+**Changes:**
+- **Profile:** Added Dark Mode toggle switch to `app/(student)/profile.tsx`.
+- **Wallet:** Themed dashboard cards, quick actions, and transaction list in `app/(student)/index.tsx`.
+- **Purchase:** Themed meal selection cards, quantity inputs, and receipts in `app/(student)/purchase.tsx`.
+- **Tickets:** Themed ticket list cards and QR code modal in `app/(student)/tickets.tsx`.
+- **Result:** Consistent Navy Blue/Gold theme across the entire application.
