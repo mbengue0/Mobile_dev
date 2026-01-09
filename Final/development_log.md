@@ -216,4 +216,25 @@
 - **Wallet:** Themed dashboard cards, quick actions, and transaction list in `app/(student)/index.tsx`.
 - **Purchase:** Themed meal selection cards, quantity inputs, and receipts in `app/(student)/purchase.tsx`.
 - **Tickets:** Themed ticket list cards and QR code modal in `app/(student)/tickets.tsx`.
-- **Result:** Consistent Navy Blue/Gold theme across the entire application.
+- **Result**: Consistent Navy Blue/Gold theme across the entire application.
+
+## 30. Dynamic Scanner UI
+**Action:** Replaced hardcoded meal times in Admin Scanner with dynamic DB values.
+**Changes:**
+- **Hooks:** Created `hooks/useSystemSettings.ts` to centralize fetching of `meal_times` and `meal_prices`.
+- **Scanner:** Refactored `app/(admin)/scanner.tsx` to consume `useSystemSettings` and display real-time meal windows.
+- **Result:** Admin scanner now instantly reflects system configuration changes.
+
+## 31. Realtime System Settings
+**Action:** Enabled Supabase Realtime for `system_settings` table.
+**Changes:**
+- **Migration:** Created `009_enable_realtime_settings.sql` to add table to `supabase_realtime` publication.
+- **Hook:** Updated `useSystemSettings.ts` to subscribe to `postgres_changes` and invalidate query cache.
+- **Result:** Use `useSystemSettings` now provides live updates when admins modify meal times or prices.
+
+## 32. Auto-Refresh on Focus
+**Action:** Implemented `useFocusEffect` for System Settings.
+**Changes:**
+- **Hook:** Updated `hooks/useSystemSettings.ts` to trigger `query.refetch()` whenever the screen gains focus (using `expo-router`'s `useFocusEffect`).
+- **Refactor:** `app/(student)/purchase.tsx` now consumes `useSystemSettings` instead of localized query logic, inheriting both Realtime and Auto-Refresh capabilities.
+- **Result:** Students and Admins will see updated prices/times immediately upon navigating to the screen, ensuring data is never stale.
