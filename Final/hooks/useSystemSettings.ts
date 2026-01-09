@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
 export interface MealPrices {
@@ -19,6 +20,29 @@ export interface SystemSettings {
 }
 
 export function useSystemSettings() {
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('system_settings_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'system_settings'
+                },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['system_settings'] });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [queryClient]);
+
     return useQuery({
         queryKey: ['system_settings'],
         queryFn: async (): Promise<SystemSettings> => {
