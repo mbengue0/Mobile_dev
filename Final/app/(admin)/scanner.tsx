@@ -4,27 +4,29 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Alert,
     Vibration,
+    ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
+import { useSystemSettings } from '../../hooks/useSystemSettings';
 
 export default function ScannerScreen() {
     const { user } = useAuth();
     const { colors } = useTheme();
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
-    const isScanning = React.useRef(false); // Ref for synchronous locking
+    const isScanning = React.useRef(false);
     const [lastScanResult, setLastScanResult] = useState<{
         success: boolean;
         message: string;
     } | null>(null);
 
-    // Reset lock when screen focuses or scanned state changes
+    const { data: settings, isLoading: settingsLoading } = useSystemSettings();
+
     useEffect(() => {
         if (!scanned) {
             isScanning.current = false;
@@ -32,6 +34,18 @@ export default function ScannerScreen() {
     }, [scanned]);
 
     const styles = getStyles(colors);
+
+    const formatTimeWindow = (start?: number, end?: number) => {
+        if (start === undefined || end === undefined) return "Loading...";
+
+        const formatHour = (h: number) => {
+            const period = h >= 12 ? 'PM' : 'AM';
+            const hour12 = h % 12 || 12;
+            return `${hour12}:00 ${period}`;
+        };
+
+        return `${formatHour(start)} - ${formatHour(end)}`;
+    };
 
     if (!permission) {
         return <View style={styles.container}><Text>Requesting camera permission...</Text></View>;
@@ -50,10 +64,8 @@ export default function ScannerScreen() {
     }
 
     const handleBarCodeScanned = async ({ data }: { data: string }) => {
-        // Check ref immediately (synchronous)
         if (isScanning.current || scanned) return;
 
-        // Lock immediately
         isScanning.current = true;
         setScanned(true);
         Vibration.vibrate(100);
@@ -66,7 +78,6 @@ export default function ScannerScreen() {
 
             if (error) throw error;
 
-            // Parse result if it's a string, otherwise use it directly
             const parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
 
             if (parsedResult?.success) {
@@ -151,18 +162,30 @@ export default function ScannerScreen() {
 
             <View style={styles.infoPanel}>
                 <Text style={styles.infoPanelTitle}>Meal Time Windows</Text>
-                <View style={styles.timeSlot}>
-                    <Ionicons name="sunny" size={20} color={colors.primary} />
-                    <Text style={styles.timeText}>Breakfast: 7:00 AM - 11:00 AM</Text>
-                </View>
-                <View style={styles.timeSlot}>
-                    <Ionicons name="restaurant" size={20} color={colors.primary} />
-                    <Text style={styles.timeText}>Lunch: 12:00 PM - 3:00 PM</Text>
-                </View>
-                <View style={styles.timeSlot}>
-                    <Ionicons name="moon" size={20} color={colors.primary} />
-                    <Text style={styles.timeText}>Dinner: 7:00 PM - 10:00 PM</Text>
-                </View>
+                {settingsLoading ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                    <>
+                        <View style={styles.timeSlot}>
+                            <Ionicons name="sunny" size={20} color={colors.primary} />
+                            <Text style={styles.timeText}>
+                                Breakfast: {formatTimeWindow(settings?.mealTimes.breakfast.start, settings?.mealTimes.breakfast.end)}
+                            </Text>
+                        </View>
+                        <View style={styles.timeSlot}>
+                            <Ionicons name="restaurant" size={20} color={colors.primary} />
+                            <Text style={styles.timeText}>
+                                Lunch: {formatTimeWindow(settings?.mealTimes.lunch.start, settings?.mealTimes.lunch.end)}
+                            </Text>
+                        </View>
+                        <View style={styles.timeSlot}>
+                            <Ionicons name="moon" size={20} color={colors.primary} />
+                            <Text style={styles.timeText}>
+                                Dinner: {formatTimeWindow(settings?.mealTimes.dinner.start, settings?.mealTimes.dinner.end)}
+                            </Text>
+                        </View>
+                    </>
+                )}
             </View>
         </View>
     );
