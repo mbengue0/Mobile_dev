@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useFocusEffect } from 'expo-router';
 import { supabase } from '../lib/supabase';
 
 export interface MealPrices {
@@ -22,28 +23,7 @@ export interface SystemSettings {
 export function useSystemSettings() {
     const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const channel = supabase
-            .channel('system_settings_changes')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'system_settings'
-                },
-                () => {
-                    queryClient.invalidateQueries({ queryKey: ['system_settings'] });
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [queryClient]);
-
-    return useQuery({
+    const query = useQuery({
         queryKey: ['system_settings'],
         queryFn: async (): Promise<SystemSettings> => {
             const { data, error } = await supabase
@@ -77,4 +57,34 @@ export function useSystemSettings() {
             };
         },
     });
+
+    // Auto-refresh when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            query.refetch();
+        }, [query.refetch])
+    );
+
+    useEffect(() => {
+        const channel = supabase
+            .channel('system_settings_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'system_settings'
+                },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['system_settings'] });
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [queryClient]);
+
+    return query;
 }

@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useTheme } from '../../providers/ThemeProvider';
+import { useSystemSettings } from '../../hooks/useSystemSettings';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner';
 
@@ -43,41 +44,8 @@ export default function PurchaseScreen() {
     const { sendNotification } = useNotifications();
     const { colors } = useTheme();
 
-    // Fetch dynamic system settings (prices and times)
-    const { data: systemSettings, isLoading: settingsLoading } = useQuery({
-        queryKey: ['system_settings'],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('system_settings')
-                .select('*')
-                .in('setting_key', ['meal_prices', 'meal_times']);
-
-            if (error) {
-                console.error('Error fetching settings:', error);
-                // Fallback defaults
-                return {
-                    mealPrices: { breakfast: 500, lunch: 1000, dinner: 800 } as MealPrices,
-                    mealTimes: {
-                        breakfast: { start: 7, end: 11 },
-                        lunch: { start: 12, end: 15 },
-                        dinner: { start: 19, end: 22 },
-                    } as MealTimes,
-                };
-            }
-
-            const mealPrices = data?.find(s => s.setting_key === 'meal_prices')?.setting_value as MealPrices;
-            const mealTimes = data?.find(s => s.setting_key === 'meal_times')?.setting_value as MealTimes;
-
-            return {
-                mealPrices: mealPrices || { breakfast: 500, lunch: 1000, dinner: 800 },
-                mealTimes: mealTimes || {
-                    breakfast: { start: 7, end: 11 },
-                    lunch: { start: 12, end: 15 },
-                    dinner: { start: 19, end: 22 },
-                },
-            };
-        },
-    });
+    // Fetch dynamic system settings via centralized hook
+    const { data: systemSettings, isLoading: settingsLoading } = useSystemSettings();
 
     const currentPrice = systemSettings?.mealPrices?.[selectedMeal] || 0;
 
