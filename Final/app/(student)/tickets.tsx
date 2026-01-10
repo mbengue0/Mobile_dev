@@ -15,31 +15,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// import { BlurView } from 'expo-blur'; // removed to minimize deps
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
 
 // --- Helper Functions ---
 
-const getMealGradient = (mealType: string): [string, string, ...string[]] => {
+const getMealColor = (mealType: string) => {
     switch (mealType) {
         case 'breakfast':
-            return ['#F2994A', '#F2C94C']; // Sunrise Orange -> Yellow
+            return '#F2994A'; // Orange
         case 'lunch':
-            return ['#2980B9', '#6DD5FA']; // Dark Blue -> Light Blue
+            return '#132439'; // Navy Blue
         case 'dinner':
-            return ['#8E44AD', '#53346D']; // Purple -> Indigo
+            return '#8E44AD'; // Purple
         default:
-            return ['#34495E', '#2C3E50'];
+            return '#34495E';
     }
 };
 
 const formatDate = (dateString: string) => {
     try {
         return new Date(dateString).toLocaleDateString(undefined, {
-            weekday: 'long',
-            month: 'long',
+            weekday: 'short',
+            month: 'short',
             day: 'numeric'
         });
     } catch (e) {
@@ -49,77 +48,87 @@ const formatDate = (dateString: string) => {
 
 // --- Sub-Components ---
 
-// 1. Summary Card (The Stack)
+// 1. Summary Card (The Stack) - Boarding Pass Style
 const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, onPress: () => void }) => {
+    const accentColor = getMealColor(stack.type);
+
     return (
         <TouchableOpacity
             activeOpacity={0.9}
             onPress={onPress}
             style={{ width: width, alignItems: 'center', justifyContent: 'center' }}
         >
-            <LinearGradient
-                colors={getMealGradient(stack.type)}
-                style={styles(colors).stackCard}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            >
-                <View style={styles(colors).stackContent}>
-                    <View style={styles(colors).stackHeader}>
-                        <Text style={styles(colors).stackTitle}>{stack.type.toUpperCase()}</Text>
-                        <Ionicons name="layers-outline" size={32} color="rgba(255,255,255,0.8)" />
-                    </View>
+            <View style={styles(colors).cardContainer}>
+                {/* 1. Header Accent */}
+                <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
+                    <Text style={styles(colors).headerTitle}>{stack.type.toUpperCase()}</Text>
+                    <Ionicons name="layers" size={24} color="rgba(255,255,255,0.9)" />
+                </View>
 
+                {/* 2. White Body */}
+                <View style={styles(colors).cardBody}>
                     <View style={styles(colors).countContainer}>
-                        <Text style={styles(colors).countText}>x{stack.count}</Text>
-                        <Text style={styles(colors).countLabel}>Tickets Available</Text>
+                        <Text style={[styles(colors).countText, { color: accentColor }]}>x{stack.count}</Text>
+                        <Text style={styles(colors).countLabel}>Available</Text>
                     </View>
 
-                    <View style={styles(colors).stackFooter}>
+                    {/* Fake Perforation Line */}
+                    <View style={styles(colors).perforationLine}>
+                        <View style={[styles(colors).cutout, { left: -30 }]} />
+                        <View style={styles(colors).dashedLine} />
+                        <View style={[styles(colors).cutout, { right: -30 }]} />
+                    </View>
+
+                    <View style={styles(colors).cardFooter}>
                         <Text style={styles(colors).tapText}>Tap to Scan</Text>
-                        <Ionicons name="arrow-forward-circle" size={30} color="#fff" />
+                        <Ionicons name="arrow-forward" size={20} color={colors.textSecondary} />
                     </View>
                 </View>
-            </LinearGradient>
+            </View>
         </TouchableOpacity>
     );
 });
 
-// 2. The Detailed Ticket (Inside Modal)
+// 2. The Detailed Ticket (Inside Modal) - Boarding Pass Style
 const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Ticket; colors: any, index: number, total: number }) => {
+    const accentColor = getMealColor(item.meal_type);
+
     return (
         <View style={{ width: width, alignItems: 'center', justifyContent: 'center' }}>
-            <LinearGradient
-                colors={getMealGradient(item.meal_type)}
-                style={styles(colors).modalCard}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            >
-                {/* Header */}
-                <View style={styles(colors).modalCardHeader}>
-                    <Text style={styles(colors).modalTitle}>
-                        {item.meal_type.toUpperCase()}
-                    </Text>
-                    <Text style={styles(colors).modalCounter}>
-                        {index + 1} / {total}
-                    </Text>
+            <View style={styles(colors).cardContainer}>
+                {/* 1. Header Accent */}
+                <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
+                    <Text style={styles(colors).headerTitle}>BOARDING PASS</Text>
+                    <Text style={styles(colors).headerCounter}>{index + 1} of {total}</Text>
                 </View>
 
-                {/* QR Code */}
-                <View style={styles(colors).modalQrContainer}>
-                    <View style={styles(colors).qrBackground}>
-                        <QRCode value={item.qr_code_data} size={200} backgroundColor="white" />
+                {/* 2. White Body */}
+                <View style={styles(colors).cardBody}>
+                    {/* Info Row */}
+                    <View style={styles(colors).ticketInfoRow}>
+                        <View>
+                            <Text style={styles(colors).infoLabel}>MEAL</Text>
+                            <Text style={styles(colors).infoValue}>{item.meal_type.toUpperCase()}</Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end' }}>
+                            <Text style={styles(colors).infoLabel}>DATE</Text>
+                            <Text style={styles(colors).infoValue}>{formatDate(item.meal_date)}</Text>
+                        </View>
                     </View>
-                    <Text style={styles(colors).modalTicketId}>#{item.ticket_number}</Text>
-                </View>
 
-                {/* Footer */}
-                <View style={styles(colors).modalCardFooter}>
-                    <Text style={styles(colors).modalDate}>
-                        {formatDate(item.meal_date)}
-                    </Text>
-                    <Text style={styles(colors).modalPrice}>{item.price} XAF</Text>
+                    {/* QR Code */}
+                    <View style={styles(colors).qrWrapper}>
+                        <QRCode value={item.qr_code_data} size={180} backgroundColor="white" />
+                    </View>
+                    <Text style={styles(colors).ticketId}>#{item.ticket_number}</Text>
+
+                    {/* Footer Price */}
+                    <View style={styles(colors).ticketPriceContainer}>
+                        <Text style={styles(colors).priceLabel}>PRICE</Text>
+                        <Text style={[styles(colors).priceValue, { color: accentColor }]}>{item.price} XAF</Text>
+                    </View>
                 </View>
-            </LinearGradient>
+            </View>
         </View>
     );
 });
@@ -130,7 +139,7 @@ const HistoryTicketRow = React.memo(({ item, colors }: { item: Ticket; colors: a
             <Ionicons
                 name={item.status === 'used' ? "checkmark-circle" : "alert-circle"}
                 size={24}
-                color={item.status === 'used' ? colors.textSecondary : colors.danger}
+                color={item.status === 'used' ? '#132439' : '#E74C3C'}
             />
         </View>
         <View style={{ flex: 1 }}>
@@ -170,34 +179,29 @@ export default function TicketsScreen() {
             lunch: [],
             dinner: []
         };
-
-        // Strict grouping
         data.active.forEach(t => {
             if (groups[t.meal_type]) {
+                if (!groups[t.meal_type]) groups[t.meal_type] = [];
                 groups[t.meal_type].push(t);
             }
         });
-
-        // Convert to array (only non-empty stacks)
         return Object.keys(groups)
             .map(type => ({
                 type,
                 count: groups[type].length,
-                tickets: groups[type] // Already sorted by Oldest First via hook
+                tickets: groups[type]
             }))
             .filter(stack => stack.count > 0);
     }, [data?.active]);
 
-    // Active Tickets for Modal
     const modalTickets = useMemo(() => {
         if (!selectedStackType) return [];
         return stacks.find(s => s.type === selectedStackType)?.tickets || [];
     }, [selectedStackType, stacks]);
 
-    // Auto-close modal if tickets run out (Realtime update)
     React.useEffect(() => {
         if (selectedStackType && modalTickets.length === 0) {
-            setSelectedStackType(null); // Close modal
+            setSelectedStackType(null);
         }
     }, [modalTickets.length, selectedStackType]);
 
@@ -206,13 +210,16 @@ export default function TicketsScreen() {
         <View style={styles(colors).container}>
             {/* Header / Segmented Control */}
             <View style={[styles(colors).headerContainer, { paddingTop: insets.top + 10 }]}>
+                <View style={styles(colors).headerTop}>
+                    <Text style={styles(colors).screenTitle}>My Tickets</Text>
+                </View>
                 <View style={styles(colors).segmentedControl}>
                     <TouchableOpacity
                         style={[styles(colors).segmentBtn, viewMode === 'active' && styles(colors).segmentBtnActive]}
                         onPress={() => setViewMode('active')}
                     >
                         <Text style={[styles(colors).segmentText, viewMode === 'active' && styles(colors).segmentTextActive]}>
-                            My Wallet
+                            Active
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -230,7 +237,7 @@ export default function TicketsScreen() {
             {viewMode === 'active' ? (
                 <View style={styles(colors).carouselContainer}>
                     {isLoading ? (
-                        <Text style={styles(colors).loadingText}>Loading Wallet...</Text>
+                        <Text style={styles(colors).loadingText}>Loading...</Text>
                     ) : stacks.length > 0 ? (
                         <FlatList
                             data={stacks}
@@ -248,21 +255,22 @@ export default function TicketsScreen() {
                             snapToAlignment="center"
                             decelerationRate="fast"
                             refreshControl={
-                                <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#fff" />
+                                <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                             }
                         />
                     ) : (
                         <View style={styles(colors).emptyState}>
-                            <Ionicons name="wallet-outline" size={80} color="rgba(255,255,255,0.3)" />
-                            <Text style={styles(colors).emptyText}>Your wallet is empty</Text>
-                            <Text style={styles(colors).emptySubtext}>Buy tickets to see them here</Text>
+                            <Ionicons name="wallet-outline" size={60} color="#ccc" />
+                            <Text style={styles(colors).emptyText}>Empty Wallet</Text>
+                            <Text style={styles(colors).emptySubtext}>Purchased tickets appear here</Text>
                         </View>
                     )}
                     {/* Pagination Dots */}
                     {stacks.length > 1 && (
                         <View style={styles(colors).pagination}>
                             {stacks.map((_, i) => (
-                                <View key={i} style={[styles(colors).dot, styles(colors).dotActive]} />
+                                <View key={i} style={[styles(colors).dot, i === 0 ? styles(colors).dotActive : {}]} />
+                                // Note: Simple dot logic for now
                             ))}
                         </View>
                     )}
@@ -274,7 +282,7 @@ export default function TicketsScreen() {
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={styles(colors).listContent}
                     refreshControl={
-                        <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />
+                        <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                     }
                     ListEmptyComponent={
                         <View style={styles(colors).emptyState}>
@@ -320,7 +328,7 @@ export default function TicketsScreen() {
                             decelerationRate="fast"
                         />
                     </View>
-                    <Text style={styles(colors).modalHint}>Swipe to see next ticket</Text>
+                    <Text style={styles(colors).modalHint}>Show this code to the scanner</Text>
                 </View>
             </Modal>
         </View>
@@ -330,36 +338,52 @@ export default function TicketsScreen() {
 const styles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#132439',
+        backgroundColor: '#F5F7FA', // Light Grey Background
     },
     headerContainer: {
         paddingBottom: 15,
         paddingHorizontal: 20,
-        backgroundColor: '#132439',
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
         zIndex: 10,
+    },
+    headerTop: {
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    screenTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#132439',
     },
     segmentedControl: {
         flexDirection: 'row',
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: '#F0F0F0',
         borderRadius: 12,
         padding: 4,
     },
     segmentBtn: {
         flex: 1,
-        paddingVertical: 10,
+        paddingVertical: 8,
         alignItems: 'center',
         borderRadius: 10,
     },
     segmentBtnActive: {
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     segmentText: {
-        color: 'rgba(255,255,255,0.6)',
+        color: '#888',
         fontWeight: '600',
         fontSize: 14,
     },
     segmentTextActive: {
-        color: '#fff',
+        color: '#132439', // Navy Blue
         fontWeight: 'bold',
     },
     carouselContainer: {
@@ -368,66 +392,142 @@ const styles = (colors: any) => StyleSheet.create({
         justifyContent: 'center',
     },
     // Ticket Stack Card
-    stackCard: {
+    cardContainer: {
         width: CARD_WIDTH,
-        height: 420,
-        borderRadius: 24,
-        padding: 30,
+        borderRadius: 20,
+        backgroundColor: '#fff',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 10,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+        overflow: 'hidden',
     },
-    stackContent: {
-        flex: 1,
-        justifyContent: 'space-between',
-    },
-    stackHeader: {
+    cardHeaderAccent: {
+        height: 60,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: 20,
     },
-    stackTitle: {
+    headerTitle: {
         color: '#fff',
-        fontSize: 28,
-        fontWeight: '900',
+        fontSize: 18,
+        fontWeight: 'bold',
         letterSpacing: 1,
     },
-    countContainer: {
+    headerCounter: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    cardBody: {
+        padding: 20,
         alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: '#fff',
+    },
+    // Stack Specific
+    countContainer: {
+        marginTop: 20,
+        alignItems: 'center',
     },
     countText: {
-        color: '#fff',
-        fontSize: 80,
+        fontSize: 60,
         fontWeight: 'bold',
     },
     countLabel: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 18,
-        fontWeight: '600',
-        marginTop: 5,
-        letterSpacing: 1,
+        color: '#888',
+        fontSize: 16,
+        fontWeight: '500',
+        marginTop: -5,
     },
-    stackFooter: {
+    perforationLine: {
+        width: '120%',
+        height: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        paddingVertical: 12,
-        borderRadius: 50,
+        marginVertical: 30,
+        position: 'relative',
+    },
+    dashedLine: {
+        width: '100%',
+        height: 1,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderStyle: 'dashed',
+    },
+    cutout: {
+        position: 'absolute',
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#F5F7FA', // Match screen background
+        top: -10,
+    },
+    cardFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
     },
     tapText: {
-        color: '#fff',
+        color: '#888',
+        fontSize: 14,
+        marginRight: 8,
+    },
+    // Modal Ticket Info
+    ticketInfoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 20,
+    },
+    infoLabel: {
+        color: '#aaa',
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: 4,
+    },
+    infoValue: {
+        color: '#333',
         fontSize: 16,
         fontWeight: 'bold',
-        marginRight: 10,
     },
+    qrWrapper: {
+        padding: 10,
+        backgroundColor: '#fff',
+    },
+    ticketId: {
+        color: '#ccc',
+        fontSize: 12,
+        fontFamily: 'Courier',
+        marginTop: 10,
+        letterSpacing: 1,
+    },
+    ticketPriceContainer: {
+        marginTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+        paddingTop: 15,
+        width: '100%',
+        alignItems: 'center',
+    },
+    priceLabel: {
+        color: '#aaa',
+        fontSize: 10,
+        fontWeight: '600',
+        letterSpacing: 1,
+        marginBottom: 2,
+    },
+    priceValue: {
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+
     // Modal Styles
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.95)', // Dark backdrop
+        backgroundColor: 'rgba(19, 36, 57, 0.95)', // Navy Backdrop
         alignItems: 'center',
     },
     closeButton: {
@@ -440,91 +540,31 @@ const styles = (colors: any) => StyleSheet.create({
         fontSize: 14,
         marginBottom: 40,
     },
-    modalCard: {
-        width: CARD_WIDTH,
-        height: 520,
-        borderRadius: 24,
-        padding: 24,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.4,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    modalCardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%',
-        marginBottom: 40,
-    },
-    modalTitle: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    modalCounter: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    modalQrContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    qrBackground: {
-        backgroundColor: '#fff',
-        padding: 20,
-        borderRadius: 24,
-    },
-    modalTicketId: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 16,
-        fontFamily: 'Courier',
-        fontWeight: 'bold',
-        marginTop: 20,
-        letterSpacing: 2,
-    },
-    modalCardFooter: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.3)',
-        paddingTop: 20,
-        marginTop: 20,
-    },
-    modalDate: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    modalPrice: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
+
     // Shared
-    loadingText: { color: '#fff', fontSize: 16 },
+    loadingText: { color: '#888', fontSize: 16 },
     emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    emptyText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    emptySubtext: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
+    emptyText: { color: '#333', fontSize: 20, fontWeight: 'bold', marginTop: 10 },
+    emptySubtext: { color: '#888', fontSize: 14 },
     listContent: { padding: 20 },
     historyCard: {
-        backgroundColor: colors.card,
+        backgroundColor: '#fff',
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
         flexDirection: 'row',
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 2,
     },
     historyIcon: { marginRight: 15 },
-    historyTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
-    historyDate: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
-    badge: { backgroundColor: colors.border, padding: 6, borderRadius: 6 },
-    badgeText: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
+    historyTitle: { color: '#333', fontSize: 16, fontWeight: 'bold' },
+    historyDate: { color: '#888', fontSize: 12, marginTop: 2 },
+    badge: { backgroundColor: '#f0f0f0', padding: 6, borderRadius: 6 },
+    badgeText: { color: '#555', fontSize: 10, fontWeight: 'bold' },
     pagination: {
         flexDirection: 'row',
         height: 40,
@@ -535,10 +575,10 @@ const styles = (colors: any) => StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: '#ddd',
         marginHorizontal: 3,
     },
     dotActive: {
-        backgroundColor: '#fff',
+        backgroundColor: '#132439', // Navy active
     },
 });
