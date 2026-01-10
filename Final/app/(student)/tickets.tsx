@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
     View,
     Text,
@@ -7,6 +7,7 @@ import {
     RefreshControl,
     TouchableOpacity,
     Dimensions,
+    Modal,
 } from 'react-native';
 import { useTickets, Ticket } from '../../hooks/useTickets';
 import QRCode from 'react-native-qrcode-svg';
@@ -14,68 +15,110 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+// import { BlurView } from 'expo-blur'; // removed to minimize deps
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.8;
+const { width, height } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.85;
+
+// --- Helper Functions ---
+
+const getMealGradient = (mealType: string): [string, string, ...string[]] => {
+    switch (mealType) {
+        case 'breakfast':
+            return ['#F2994A', '#F2C94C']; // Sunrise Orange -> Yellow
+        case 'lunch':
+            return ['#2980B9', '#6DD5FA']; // Dark Blue -> Light Blue
+        case 'dinner':
+            return ['#8E44AD', '#53346D']; // Purple -> Indigo
+        default:
+            return ['#34495E', '#2C3E50'];
+    }
+};
+
+const formatDate = (dateString: string) => {
+    try {
+        return new Date(dateString).toLocaleDateString(undefined, {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric'
+        });
+    } catch (e) {
+        return dateString;
+    }
+};
 
 // --- Sub-Components ---
 
-const ActiveTicketCard = React.memo(({ item, colors }: { item: Ticket; colors: any }) => {
-    const getMealColor = (mealType: string): [string, string, ...string[]] => {
-        switch (mealType) {
-            case 'breakfast':
-                return ['#F39C12', '#F1C40F'];
-            case 'lunch':
-                return ['#2980B9', '#3498DB'];
-            case 'dinner':
-                return ['#8E44AD', '#9B59B6'];
-            default:
-                return ['#34495E', '#2C3E50'];
-        }
-    };
-
-    const formatDate = (dateString: string) => {
-        try {
-            return new Date(dateString).toLocaleDateString(undefined, {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-        } catch (e) {
-            return dateString;
-        }
-    };
-
+// 1. Summary Card (The Stack)
+const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, onPress: () => void }) => {
     return (
-        <View style={{ width: width, alignItems: 'center', justifyContent: 'center' }}>
+        <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={onPress}
+            style={{ width: width, alignItems: 'center', justifyContent: 'center' }}
+        >
             <LinearGradient
-                colors={getMealColor(item.meal_type)}
-                style={styles(colors).activeCard}
+                colors={getMealGradient(stack.type)}
+                style={styles(colors).stackCard}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
             >
-                <View style={styles(colors).cardHeader}>
-                    <Text style={styles(colors).cardTitle}>
-                        {item.meal_type.toUpperCase()}
-                    </Text>
-                    <Ionicons name="restaurant" size={24} color="rgba(255,255,255,0.8)" />
-                </View>
+                <View style={styles(colors).stackContent}>
+                    <View style={styles(colors).stackHeader}>
+                        <Text style={styles(colors).stackTitle}>{stack.type.toUpperCase()}</Text>
+                        <Ionicons name="layers-outline" size={32} color="rgba(255,255,255,0.8)" />
+                    </View>
 
-                <View style={styles(colors).qrContainer}>
-                    <View style={styles(colors).qrBackground}>
-                        <QRCode value={item.qr_code_data} size={180} backgroundColor="white" />
+                    <View style={styles(colors).countContainer}>
+                        <Text style={styles(colors).countText}>x{stack.count}</Text>
+                        <Text style={styles(colors).countLabel}>Tickets Available</Text>
+                    </View>
+
+                    <View style={styles(colors).stackFooter}>
+                        <Text style={styles(colors).tapText}>Tap to Scan</Text>
+                        <Ionicons name="arrow-forward-circle" size={30} color="#fff" />
                     </View>
                 </View>
+            </LinearGradient>
+        </TouchableOpacity>
+    );
+});
 
-                <View style={styles(colors).cardFooter}>
-                    <Text style={styles(colors).ticketId}>Ticket #{item.ticket_number}</Text>
-                    <Text style={styles(colors).priceTag}>{item.price} FCFA</Text>
+// 2. The Detailed Ticket (Inside Modal)
+const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Ticket; colors: any, index: number, total: number }) => {
+    return (
+        <View style={{ width: width, alignItems: 'center', justifyContent: 'center' }}>
+            <LinearGradient
+                colors={getMealGradient(item.meal_type)}
+                style={styles(colors).modalCard}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            >
+                {/* Header */}
+                <View style={styles(colors).modalCardHeader}>
+                    <Text style={styles(colors).modalTitle}>
+                        {item.meal_type.toUpperCase()}
+                    </Text>
+                    <Text style={styles(colors).modalCounter}>
+                        {index + 1} / {total}
+                    </Text>
                 </View>
 
-                <Text style={styles(colors).dateText}>
-                    {formatDate(item.meal_date)}
-                </Text>
+                {/* QR Code */}
+                <View style={styles(colors).modalQrContainer}>
+                    <View style={styles(colors).qrBackground}>
+                        <QRCode value={item.qr_code_data} size={200} backgroundColor="white" />
+                    </View>
+                    <Text style={styles(colors).modalTicketId}>#{item.ticket_number}</Text>
+                </View>
+
+                {/* Footer */}
+                <View style={styles(colors).modalCardFooter}>
+                    <Text style={styles(colors).modalDate}>
+                        {formatDate(item.meal_date)}
+                    </Text>
+                    <Text style={styles(colors).modalPrice}>{item.price} XAF</Text>
+                </View>
             </LinearGradient>
         </View>
     );
@@ -115,6 +158,50 @@ export default function TicketsScreen() {
     const { data, isLoading, refetch, isRefetching } = useTickets();
     const [viewMode, setViewMode] = useState<'active' | 'history'>('active');
 
+    // Modal State
+    const [selectedStackType, setSelectedStackType] = useState<string | null>(null);
+
+    // Grouping Logic
+    const stacks = useMemo(() => {
+        if (!data?.active) return [];
+
+        const groups: Record<string, Ticket[]> = {
+            breakfast: [],
+            lunch: [],
+            dinner: []
+        };
+
+        // Strict grouping
+        data.active.forEach(t => {
+            if (groups[t.meal_type]) {
+                groups[t.meal_type].push(t);
+            }
+        });
+
+        // Convert to array (only non-empty stacks)
+        return Object.keys(groups)
+            .map(type => ({
+                type,
+                count: groups[type].length,
+                tickets: groups[type] // Already sorted by Oldest First via hook
+            }))
+            .filter(stack => stack.count > 0);
+    }, [data?.active]);
+
+    // Active Tickets for Modal
+    const modalTickets = useMemo(() => {
+        if (!selectedStackType) return [];
+        return stacks.find(s => s.type === selectedStackType)?.tickets || [];
+    }, [selectedStackType, stacks]);
+
+    // Auto-close modal if tickets run out (Realtime update)
+    React.useEffect(() => {
+        if (selectedStackType && modalTickets.length === 0) {
+            setSelectedStackType(null); // Close modal
+        }
+    }, [modalTickets.length, selectedStackType]);
+
+
     return (
         <View style={styles(colors).container}>
             {/* Header / Segmented Control */}
@@ -125,7 +212,7 @@ export default function TicketsScreen() {
                         onPress={() => setViewMode('active')}
                     >
                         <Text style={[styles(colors).segmentText, viewMode === 'active' && styles(colors).segmentTextActive]}>
-                            Active Wallet
+                            My Wallet
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -144,11 +231,17 @@ export default function TicketsScreen() {
                 <View style={styles(colors).carouselContainer}>
                     {isLoading ? (
                         <Text style={styles(colors).loadingText}>Loading Wallet...</Text>
-                    ) : (data?.active?.length || 0) > 0 ? (
+                    ) : stacks.length > 0 ? (
                         <FlatList
-                            data={data!.active}
-                            renderItem={({ item }) => <ActiveTicketCard item={item} colors={colors} />}
-                            keyExtractor={(item) => item.id}
+                            data={stacks}
+                            renderItem={({ item }) => (
+                                <TicketStackCard
+                                    stack={item}
+                                    colors={colors}
+                                    onPress={() => setSelectedStackType(item.type)}
+                                />
+                            )}
+                            keyExtractor={(item) => item.type}
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
@@ -162,15 +255,14 @@ export default function TicketsScreen() {
                         <View style={styles(colors).emptyState}>
                             <Ionicons name="wallet-outline" size={80} color="rgba(255,255,255,0.3)" />
                             <Text style={styles(colors).emptyText}>Your wallet is empty</Text>
-                            <Text style={styles(colors).emptySubtext}>Buy a ticket to see it here</Text>
+                            <Text style={styles(colors).emptySubtext}>Buy tickets to see them here</Text>
                         </View>
                     )}
-
                     {/* Pagination Dots */}
-                    {(data?.active?.length || 0) > 1 && (
+                    {stacks.length > 1 && (
                         <View style={styles(colors).pagination}>
-                            {data!.active.map((_, i) => (
-                                <View key={i} style={[styles(colors).dot, i === 0 && styles(colors).dotActive]} />
+                            {stacks.map((_, i) => (
+                                <View key={i} style={[styles(colors).dot, styles(colors).dotActive]} />
                             ))}
                         </View>
                     )}
@@ -191,6 +283,46 @@ export default function TicketsScreen() {
                     }
                 />
             )}
+
+            {/* Full Screen Scanner Modal */}
+            <Modal
+                visible={!!selectedStackType}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setSelectedStackType(null)}
+            >
+                <View style={styles(colors).modalContainer}>
+                    {/* Close Button */}
+                    <TouchableOpacity
+                        style={[styles(colors).closeButton, { top: insets.top + 20 }]}
+                        onPress={() => setSelectedStackType(null)}
+                    >
+                        <Ionicons name="close-circle" size={40} color="#fff" />
+                    </TouchableOpacity>
+
+                    {/* Modal Content - Carousel of specific tickets */}
+                    <View style={{ flex: 1, justifyContent: 'center' }}>
+                        <FlatList
+                            data={modalTickets}
+                            renderItem={({ item, index }) => (
+                                <ModalTicketItem
+                                    item={item}
+                                    colors={colors}
+                                    index={index}
+                                    total={modalTickets.length}
+                                />
+                            )}
+                            keyExtractor={(item) => item.id}
+                            horizontal
+                            pagingEnabled
+                            showsHorizontalScrollIndicator={false}
+                            snapToAlignment="center"
+                            decelerationRate="fast"
+                        />
+                    </View>
+                    <Text style={styles(colors).modalHint}>Swipe to see next ticket</Text>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -201,7 +333,7 @@ const styles = (colors: any) => StyleSheet.create({
         backgroundColor: '#132439',
     },
     headerContainer: {
-        paddingBottom: 10,
+        paddingBottom: 15,
         paddingHorizontal: 20,
         backgroundColor: '#132439',
         zIndex: 10,
@@ -232,113 +364,154 @@ const styles = (colors: any) => StyleSheet.create({
     },
     carouselContainer: {
         flex: 1,
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
     },
-    activeCard: {
+    // Ticket Stack Card
+    stackCard: {
         width: CARD_WIDTH,
-        height: 480,
+        height: 420,
         borderRadius: 24,
-        padding: 24,
-        alignItems: 'center',
+        padding: 30,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.3,
         shadowRadius: 20,
         elevation: 10,
     },
-    cardHeader: {
+    stackContent: {
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    stackHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        width: '100%',
-        marginBottom: 30,
+        alignItems: 'center',
     },
-    cardTitle: {
+    stackTitle: {
         color: '#fff',
         fontSize: 28,
         fontWeight: '900',
         letterSpacing: 1,
     },
-    qrContainer: {
+    countContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    countText: {
+        color: '#fff',
+        fontSize: 80,
+        fontWeight: 'bold',
+    },
+    countLabel: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 18,
+        fontWeight: '600',
+        marginTop: 5,
+        letterSpacing: 1,
+    },
+    stackFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingVertical: 12,
+        borderRadius: 50,
+    },
+    tapText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginRight: 10,
+    },
+    // Modal Styles
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.95)', // Dark backdrop
+        alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        right: 20,
+        zIndex: 20,
+    },
+    modalHint: {
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: 14,
+        marginBottom: 40,
+    },
+    modalCard: {
+        width: CARD_WIDTH,
+        height: 520,
+        borderRadius: 24,
+        padding: 24,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.4,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    modalCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        marginBottom: 40,
+    },
+    modalTitle: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: 'bold',
+    },
+    modalCounter: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    modalQrContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        width: '100%',
     },
     qrBackground: {
         backgroundColor: '#fff',
         padding: 20,
-        borderRadius: 20,
+        borderRadius: 24,
     },
-    cardFooter: {
+    modalTicketId: {
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 16,
+        fontFamily: 'Courier',
+        fontWeight: 'bold',
+        marginTop: 20,
+        letterSpacing: 2,
+    },
+    modalCardFooter: {
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 30,
         borderTopWidth: 1,
         borderTopColor: 'rgba(255,255,255,0.3)',
-        paddingTop: 15,
+        paddingTop: 20,
+        marginTop: 20,
     },
-    ticketId: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 14,
-        fontFamily: 'Courier', // Monospace for ID
-        fontWeight: 'bold',
-    },
-    priceTag: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    dateText: {
-        color: 'rgba(255,255,255,0.9)',
-        marginTop: 10,
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    pagination: {
-        flexDirection: 'row',
-        height: 40,
-        alignItems: 'center',
-    },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        marginHorizontal: 4,
-    },
-    dotActive: {
-        backgroundColor: '#fff',
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-    },
-    loadingText: {
+    modalDate: {
         color: '#fff',
         fontSize: 16,
+        fontWeight: '600',
     },
-    emptyState: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 300,
-    },
-    emptyText: {
+    modalPrice: {
         color: '#fff',
         fontSize: 20,
         fontWeight: 'bold',
-        marginTop: 20,
     },
-    emptySubtext: {
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: 14,
-        marginTop: 5,
-    },
-    listContent: {
-        padding: 20,
-    },
+    // Shared
+    loadingText: { color: '#fff', fontSize: 16 },
+    emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    emptyText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+    emptySubtext: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
+    listContent: { padding: 20 },
     historyCard: {
         backgroundColor: colors.card,
         borderRadius: 12,
@@ -347,28 +520,25 @@ const styles = (colors: any) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    historyIcon: {
-        marginRight: 15,
+    historyIcon: { marginRight: 15 },
+    historyTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
+    historyDate: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+    badge: { backgroundColor: colors.border, padding: 6, borderRadius: 6 },
+    badgeText: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
+    pagination: {
+        flexDirection: 'row',
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    historyTitle: {
-        color: colors.text,
-        fontSize: 16,
-        fontWeight: 'bold',
+    dot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        marginHorizontal: 3,
     },
-    historyDate: {
-        color: colors.textSecondary,
-        fontSize: 12,
-        marginTop: 2,
-    },
-    badge: {
-        backgroundColor: colors.border,
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
-    },
-    badgeText: {
-        color: colors.text,
-        fontSize: 10,
-        fontWeight: 'bold',
+    dotActive: {
+        backgroundColor: '#fff',
     },
 });

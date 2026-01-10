@@ -1,3 +1,4 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { supabase } from '../lib/supabase';
@@ -17,7 +18,7 @@ export interface Ticket {
 export function useTickets() {
     const { user } = useAuth();
 
-    return useQuery({
+    const query = useQuery({
         queryKey: ['tickets', user?.id],
         queryFn: async () => {
             if (!user) return { active: [], history: [] };
@@ -32,9 +33,19 @@ export function useTickets() {
             const tickets = data as Ticket[];
 
             // Smart Sort Logic
+            const mealPriority = { breakfast: 1, lunch: 2, dinner: 3 };
+
             const active = tickets
                 .filter(t => t.status === 'active')
-                .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); // Oldest first (expires sooner)
+                .sort((a, b) => {
+                    // 1. Primary Sort: Meal Type (Breakfast -> Lunch -> Dinner)
+                    const priorityA = mealPriority[a.meal_type] || 99;
+                    const priorityB = mealPriority[b.meal_type] || 99;
+                    if (priorityA !== priorityB) return priorityA - priorityB;
+
+                    // 2. Secondary Sort: Created At (Oldest First)
+                    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+                });
 
             const history = tickets
                 .filter(t => t.status !== 'active')
@@ -52,4 +63,31 @@ export function useTickets() {
         },
         enabled: !!user,
     });
+
+    // Realtime Subscription
+    React.useEffect(() => {
+        if (!user) return;
+
+        const subscription = supabase
+            .channel('tickets_channel')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'tickets',
+                    filter: `student_id=eq.${user.id}`,
+                },
+                () => {
+                    query.refetch();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            subscription.unsubscribe();
+        };
+    }, [user, query.refetch]);
+
+    return query;
 }
