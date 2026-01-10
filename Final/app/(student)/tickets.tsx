@@ -210,9 +210,7 @@ export default function TicketsScreen() {
         <View style={styles(colors).container}>
             {/* Header / Segmented Control */}
             <View style={[styles(colors).headerContainer, { paddingTop: insets.top + 10 }]}>
-                <View style={styles(colors).headerTop}>
-                    <Text style={styles(colors).screenTitle}>My Tickets</Text>
-                </View>
+                {/* Removed HeaderTop (Duplicate Title) */}
                 <View style={styles(colors).segmentedControl}>
                     <TouchableOpacity
                         style={[styles(colors).segmentBtn, viewMode === 'active' && styles(colors).segmentBtnActive]}
@@ -348,15 +346,7 @@ const styles = (colors: any) => StyleSheet.create({
         borderBottomColor: '#eee',
         zIndex: 10,
     },
-    headerTop: {
-        marginBottom: 10,
-        alignItems: 'center',
-    },
-    screenTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#132439',
-    },
+    // Removed headerTop and screenTitle styles
     segmentedControl: {
         flexDirection: 'row',
         backgroundColor: '#F0F0F0',
@@ -527,7 +517,7 @@ const styles = (colors: any) => StyleSheet.create({
     // Modal Styles
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(19, 36, 57, 0.95)', // Navy Backdrop
+        backgroundColor: 'rgba(0, 0, 0, 0.85)', // Premium Dark Overlay
         alignItems: 'center',
     },
     closeButton: {
