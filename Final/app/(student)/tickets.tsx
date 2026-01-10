@@ -65,7 +65,7 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
                     <Ionicons name="layers" size={24} color="rgba(255,255,255,0.9)" />
                 </View>
 
-                {/* 2. White Body */}
+                {/* 2. Body */}
                 <View style={styles(colors).cardBody}>
                     <View style={styles(colors).countContainer}>
                         <Text style={[styles(colors).countText, { color: accentColor }]}>x{stack.count}</Text>
@@ -102,7 +102,7 @@ const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Tick
                     <Text style={styles(colors).headerCounter}>{index + 1} of {total}</Text>
                 </View>
 
-                {/* 2. White Body */}
+                {/* 2. Body */}
                 <View style={styles(colors).cardBody}>
                     {/* Info Row */}
                     <View style={styles(colors).ticketInfoRow}>
@@ -139,7 +139,7 @@ const HistoryTicketRow = React.memo(({ item, colors }: { item: Ticket; colors: a
             <Ionicons
                 name={item.status === 'used' ? "checkmark-circle" : "alert-circle"}
                 size={24}
-                color={item.status === 'used' ? '#132439' : '#E74C3C'}
+                color={item.status === 'used' ? colors.text : colors.danger}
             />
         </View>
         <View style={{ flex: 1 }}>
@@ -258,7 +258,7 @@ export default function TicketsScreen() {
                         />
                     ) : (
                         <View style={styles(colors).emptyState}>
-                            <Ionicons name="wallet-outline" size={60} color="#ccc" />
+                            <Ionicons name="wallet-outline" size={60} color={colors.textSecondary} />
                             <Text style={styles(colors).emptyText}>Empty Wallet</Text>
                             <Text style={styles(colors).emptySubtext}>Purchased tickets appear here</Text>
                         </View>
@@ -336,20 +336,18 @@ export default function TicketsScreen() {
 const styles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F7FA', // Light Grey Background
+        backgroundColor: colors.background, // Dynamic
     },
     headerContainer: {
         paddingBottom: 15,
         paddingHorizontal: 20,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        backgroundColor: colors.background, // Match container
         zIndex: 10,
+        paddingTop: 10,
     },
-    // Removed headerTop and screenTitle styles
     segmentedControl: {
         flexDirection: 'row',
-        backgroundColor: '#F0F0F0',
+        backgroundColor: colors.border, // Slightly lighter/darker than bg
         borderRadius: 12,
         padding: 4,
     },
@@ -360,7 +358,7 @@ const styles = (colors: any) => StyleSheet.create({
         borderRadius: 10,
     },
     segmentBtnActive: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
@@ -368,12 +366,12 @@ const styles = (colors: any) => StyleSheet.create({
         elevation: 2,
     },
     segmentText: {
-        color: '#888',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontSize: 14,
     },
     segmentTextActive: {
-        color: '#132439', // Navy Blue
+        color: colors.text,
         fontWeight: 'bold',
     },
     carouselContainer: {
@@ -385,7 +383,7 @@ const styles = (colors: any) => StyleSheet.create({
     cardContainer: {
         width: CARD_WIDTH,
         borderRadius: 20,
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -414,7 +412,7 @@ const styles = (colors: any) => StyleSheet.create({
     cardBody: {
         padding: 20,
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
     },
     // Stack Specific
     countContainer: {
@@ -426,7 +424,7 @@ const styles = (colors: any) => StyleSheet.create({
         fontWeight: 'bold',
     },
     countLabel: {
-        color: '#888',
+        color: colors.textSecondary,
         fontSize: 16,
         fontWeight: '500',
         marginTop: -5,
@@ -444,7 +442,7 @@ const styles = (colors: any) => StyleSheet.create({
         width: '100%',
         height: 1,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.border,
         borderStyle: 'dashed',
     },
     cutout: {
@@ -452,7 +450,7 @@ const styles = (colors: any) => StyleSheet.create({
         width: 20,
         height: 20,
         borderRadius: 10,
-        backgroundColor: '#F5F7FA', // Match screen background
+        backgroundColor: colors.background, // Match screen background for cutout effect
         top: -10,
     },
     cardFooter: {
@@ -461,7 +459,7 @@ const styles = (colors: any) => StyleSheet.create({
         marginBottom: 10,
     },
     tapText: {
-        color: '#888',
+        color: colors.textSecondary,
         fontSize: 14,
         marginRight: 8,
     },
@@ -473,22 +471,23 @@ const styles = (colors: any) => StyleSheet.create({
         marginBottom: 20,
     },
     infoLabel: {
-        color: '#aaa',
+        color: colors.textSecondary,
         fontSize: 12,
         fontWeight: '600',
         marginBottom: 4,
     },
     infoValue: {
-        color: '#333',
+        color: colors.text,
         fontSize: 16,
         fontWeight: 'bold',
     },
     qrWrapper: {
         padding: 10,
         backgroundColor: '#fff',
+        borderRadius: 12,
     },
     ticketId: {
-        color: '#ccc',
+        color: colors.textSecondary,
         fontSize: 12,
         fontFamily: 'Courier',
         marginTop: 10,
@@ -497,13 +496,13 @@ const styles = (colors: any) => StyleSheet.create({
     ticketPriceContainer: {
         marginTop: 20,
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: colors.border,
         paddingTop: 15,
         width: '100%',
         alignItems: 'center',
     },
     priceLabel: {
-        color: '#aaa',
+        color: colors.textSecondary,
         fontSize: 10,
         fontWeight: '600',
         letterSpacing: 1,
@@ -517,7 +516,7 @@ const styles = (colors: any) => StyleSheet.create({
     // Modal Styles
     modalContainer: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)', // Premium Dark Overlay
+        backgroundColor: 'rgba(0, 0, 0, 0.90)', // Darker overlay for better contrast
         alignItems: 'center',
     },
     closeButton: {
@@ -526,19 +525,19 @@ const styles = (colors: any) => StyleSheet.create({
         zIndex: 20,
     },
     modalHint: {
-        color: 'rgba(255,255,255,0.5)',
+        color: 'rgba(255,255,255,0.6)',
         fontSize: 14,
         marginBottom: 40,
     },
 
     // Shared
-    loadingText: { color: '#888', fontSize: 16 },
+    loadingText: { color: colors.textSecondary, fontSize: 16 },
     emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    emptyText: { color: '#333', fontSize: 20, fontWeight: 'bold', marginTop: 10 },
-    emptySubtext: { color: '#888', fontSize: 14 },
+    emptyText: { color: colors.text, fontSize: 20, fontWeight: 'bold', marginTop: 10 },
+    emptySubtext: { color: colors.textSecondary, fontSize: 14 },
     listContent: { padding: 20 },
     historyCard: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.card,
         borderRadius: 12,
         padding: 15,
         marginBottom: 10,
@@ -551,10 +550,10 @@ const styles = (colors: any) => StyleSheet.create({
         elevation: 2,
     },
     historyIcon: { marginRight: 15 },
-    historyTitle: { color: '#333', fontSize: 16, fontWeight: 'bold' },
-    historyDate: { color: '#888', fontSize: 12, marginTop: 2 },
-    badge: { backgroundColor: '#f0f0f0', padding: 6, borderRadius: 6 },
-    badgeText: { color: '#555', fontSize: 10, fontWeight: 'bold' },
+    historyTitle: { color: colors.text, fontSize: 16, fontWeight: 'bold' },
+    historyDate: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
+    badge: { backgroundColor: colors.border, padding: 6, borderRadius: 6 },
+    badgeText: { color: colors.text, fontSize: 10, fontWeight: 'bold' },
     pagination: {
         flexDirection: 'row',
         height: 40,
@@ -565,10 +564,10 @@ const styles = (colors: any) => StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#ddd',
+        backgroundColor: colors.border,
         marginHorizontal: 3,
     },
     dotActive: {
-        backgroundColor: '#132439', // Navy active
+        backgroundColor: colors.text, // Dynamic active dot
     },
 });
