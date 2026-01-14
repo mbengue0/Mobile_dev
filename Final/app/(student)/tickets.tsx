@@ -170,6 +170,20 @@ export default function TicketsScreen() {
     // Modal State
     const [selectedStackType, setSelectedStackType] = useState<string | null>(null);
 
+    // Pagination State
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+        if (viewableItems.length > 0) {
+            setActiveIndex(viewableItems[0].index || 0);
+        }
+    }).current;
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50,
+    }).current;
+
+
     // Grouping Logic
     const stacks = useMemo(() => {
         if (!data?.active) return [];
@@ -252,6 +266,8 @@ export default function TicketsScreen() {
                             showsHorizontalScrollIndicator={false}
                             snapToAlignment="center"
                             decelerationRate="fast"
+                            onViewableItemsChanged={onViewableItemsChanged}
+                            viewabilityConfig={viewabilityConfig}
                             refreshControl={
                                 <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                             }
@@ -267,8 +283,7 @@ export default function TicketsScreen() {
                     {stacks.length > 1 && (
                         <View style={styles(colors).pagination}>
                             {stacks.map((_, i) => (
-                                <View key={i} style={[styles(colors).dot, i === 0 ? styles(colors).dotActive : {}]} />
-                                // Note: Simple dot logic for now
+                                <View key={i} style={[styles(colors).dot, i === activeIndex ? styles(colors).dotActive : {}]} />
                             ))}
                         </View>
                     )}
