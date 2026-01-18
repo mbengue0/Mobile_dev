@@ -36,16 +36,13 @@
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "NOTIFICATIONS",
-        "CAMERA"
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "your-project-id-here"
-      }
     },
     "plugins": [
       [
@@ -62,6 +59,11 @@
           "cameraPermission": "Allow Kanteen to access your camera to scan meal tickets."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9c2b7542-49e3-4fa2-baa0-f180eb661c95"
+      }
+    }
   }
 }
