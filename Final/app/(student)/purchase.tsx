@@ -54,28 +54,37 @@ export default function PurchaseScreen() {
         queryFn: async () => {
             const today = new Date().toISOString().split('T')[0];
 
-            // Try to get today's menu first
-            const { data: todayMenu, error: todayError } = await supabase
+            // 1. Try to get Today's Specific Meal Image
+            const { data: specificMeal, error: specificError } = await supabase
                 .from('menu_images')
-                .select('image_url, menu_date')
+                .select('image_url, menu_date, meal_type')
                 .eq('meal_type', selectedMeal)
                 .eq('menu_date', today)
                 .single();
 
-            // If today's menu exists, return it
-            if (todayMenu) return todayMenu;
+            if (specificMeal) return { ...specificMeal, isDaily: false };
 
-            // Otherwise, get the most recent menu (fallback to yesterday or recent days)
+            // 2. Fallback: Try to get Today's "Daily Overview" Poster
+            const { data: dailyOverview } = await supabase
+                .from('menu_images')
+                .select('image_url, menu_date, meal_type')
+                .eq('meal_type', 'daily_overview')
+                .eq('menu_date', today)
+                .single();
+
+            if (dailyOverview) return { ...dailyOverview, isDaily: true };
+
+            // 3. Last Resort: Most Recent Specific Meal (e.g. yesterday)
             const { data: recentMenu } = await supabase
                 .from('menu_images')
-                .select('image_url, menu_date')
+                .select('image_url, menu_date, meal_type')
                 .eq('meal_type', selectedMeal)
                 .gte('menu_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
                 .order('menu_date', { ascending: false })
                 .limit(1)
                 .single();
 
-            return recentMenu || null;
+            return recentMenu ? { ...recentMenu, isDaily: false } : null;
         },
     });
 
@@ -224,7 +233,12 @@ export default function PurchaseScreen() {
 
             {menuImage?.image_url && (
                 <View style={styles(colors).menuPreview}>
-                    <Text style={styles(colors).menuTitle}>Today's {selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}</Text>
+                    <Text style={styles(colors).menuTitle}>
+                        {menuImage.isDaily
+                            ? "Daily Menu Overview"
+                            : `Today's ${selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}`
+                        }
+                    </Text>
                     {imageError ? (
                         <View style={[styles(colors).menuImage, styles(colors).errorContainer]}>
                             <Ionicons name="image-outline" size={48} color={colors.textSecondary} />

@@ -18,12 +18,27 @@ import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../providers/ThemeProvider';
 
+type DisplayMode = 'daily' | 'individual';
+type ExtendedMealType = 'breakfast' | 'lunch' | 'dinner' | 'daily_overview';
+
 export default function MenuScreen() {
     const { user } = useAuth();
     const { colors } = useTheme();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
-    const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner'>('lunch');
+
+    const [displayMode, setDisplayMode] = useState<DisplayMode>('daily');
+    const [mealType, setMealType] = useState<ExtendedMealType>('daily_overview');
+
+    // Sync mealType when mode changes
+    React.useEffect(() => {
+        if (displayMode === 'daily') {
+            setMealType('daily_overview');
+        } else {
+            setMealType('lunch'); // Default for individual
+        }
+        setSelectedImage(null);
+    }, [displayMode]);
 
     // Fetch existing menu image for the selected meal type
     const { data: existingMenu, refetch } = useQuery({
@@ -42,7 +57,7 @@ export default function MenuScreen() {
         },
     });
 
-    // Reset selection when meal type changes, but show existing if available
+    // Reset selection when meal type changes manually (in individual mode)
     React.useEffect(() => {
         setSelectedImage(null);
     }, [mealType]);
@@ -51,11 +66,11 @@ export default function MenuScreen() {
     const displayImage = selectedImage || existingMenu?.image_url;
 
     const pickImage = async () => {
-        // No permissions request is necessary for launching the image library
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             allowsEditing: true,
-            aspect: [4, 3],
+            // Use different aspect ratio for Daily Poster (Portrait) vs Meals (Landscape)
+            aspect: displayMode === 'daily' ? [9, 16] : [4, 3],
             quality: 0.7,
             base64: true,
         });
@@ -79,15 +94,13 @@ export default function MenuScreen() {
             const filePath = `${fileName}`;
 
             // 2. Upload to Storage
-            // Read the file as base64 using FileSystem (works in React Native)
             const base64 = await FileSystem.readAsStringAsync(selectedImage, {
                 encoding: 'base64',
             });
 
-            // Convert base64 to ArrayBuffer for Supabase
             const arrayBuffer = decode(base64);
 
-            const { error: uploadError, data } = await supabase.storage
+            const { error: uploadError } = await supabase.storage
                 .from('menu_images')
                 .upload(filePath, arrayBuffer, {
                     contentType: 'image/jpeg',
@@ -115,7 +128,7 @@ export default function MenuScreen() {
 
             Alert.alert('Success', 'Menu updated successfully!');
             setSelectedImage(null);
-            refetch(); // Refresh the "existing" image view
+            refetch();
 
         } catch (error: any) {
             Alert.alert('Upload Failed', error.message);
@@ -130,35 +143,61 @@ export default function MenuScreen() {
         <ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>Update Daily Menu</Text>
 
-            <View style={styles.selectorContainer}>
-                {(['breakfast', 'lunch', 'dinner'] as const).map((type) => (
-                    <TouchableOpacity
-                        key={type}
-                        style={[
-                            styles.typeButton,
-                            mealType === type && styles.typeButtonActive,
-                        ]}
-                        onPress={() => setMealType(type)}
-                    >
-                        <Text
-                            style={[
-                                styles.typeText,
-                                mealType === type && styles.typeTextActive,
-                            ]}
-                        >
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
+            {/* Mode Switcher */}
+            <View style={styles.modeContainer}>
+                <TouchableOpacity
+                    style={[styles.modeButton, displayMode === 'daily' && styles.modeButtonActive]}
+                    onPress={() => setDisplayMode('daily')}
+                >
+                    <Text style={[styles.modeText, displayMode === 'daily' && styles.modeTextActive]}>Daily Poster</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.modeButton, displayMode === 'individual' && styles.modeButtonActive]}
+                    onPress={() => setDisplayMode('individual')}
+                >
+                    <Text style={[styles.modeText, displayMode === 'individual' && styles.modeTextActive]}>By Meal</Text>
+                </TouchableOpacity>
             </View>
 
-            <View style={styles.previewContainer}>
+            {/* Meal Selector (Only in Individual Mode) */}
+            {displayMode === 'individual' && (
+                <View style={styles.selectorContainer}>
+                    {(['breakfast', 'lunch', 'dinner'] as const).map((type) => (
+                        <TouchableOpacity
+                            key={type}
+                            style={[
+                                styles.typeButton,
+                                mealType === type && styles.typeButtonActive,
+                            ]}
+                            onPress={() => setMealType(type)}
+                        >
+                            <Text
+                                style={[
+                                    styles.typeText,
+                                    mealType === type && styles.typeTextActive,
+                                ]}
+                            >
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
+
+            {/* Preview Container - Taller for Daily Mode */}
+            <View style={[styles.previewContainer, displayMode === 'daily' && styles.previewContainerTall]}>
                 {displayImage ? (
-                    <Image source={{ uri: displayImage }} style={styles.image} />
+                    <Image source={{ uri: displayImage }} style={styles.image} resizeMode={displayMode === 'daily' ? 'contain' : 'cover'} />
                 ) : (
                     <View style={styles.placeholder}>
-                        <Ionicons name="restaurant-outline" size={64} color={colors.textSecondary} />
-                        <Text style={styles.placeholderText}>No image selected</Text>
+                        <Ionicons
+                            name={displayMode === 'daily' ? "document-text-outline" : "restaurant-outline"}
+                            size={64}
+                            color={colors.textSecondary}
+                        />
+                        <Text style={styles.placeholderText}>
+                            {displayMode === 'daily' ? "Upload Daily Overview Poster" : "Select Meal Image"}
+                        </Text>
                     </View>
                 )}
             </View>
@@ -179,7 +218,9 @@ export default function MenuScreen() {
                 {uploading ? (
                     <ActivityIndicator color="#fff" />
                 ) : (
-                    <Text style={styles.uploadButtonText}>Upload Menu</Text>
+                    <Text style={styles.uploadButtonText}>
+                        {displayMode === 'daily' ? 'Upload Poster' : 'Upload Meal Image'}
+                    </Text>
                 )}
             </TouchableOpacity>
         </ScrollView>
@@ -199,6 +240,38 @@ const getStyles = (colors: any) => StyleSheet.create({
         color: colors.text,
         textAlign: 'center',
     },
+    // Mode Switcher
+    modeContainer: {
+        flexDirection: 'row',
+        backgroundColor: colors.border,
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 20,
+    },
+    modeButton: {
+        flex: 1,
+        paddingVertical: 10,
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+    modeButtonActive: {
+        backgroundColor: colors.card,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    modeText: {
+        color: colors.textSecondary,
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    modeTextActive: {
+        color: colors.primary,
+        fontWeight: 'bold',
+    },
+
     selectorContainer: {
         flexDirection: 'row',
         marginBottom: 20,
@@ -234,7 +307,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     },
     previewContainer: {
         width: '100%',
-        height: 250,
+        height: 250, // Default landscape height
         backgroundColor: colors.card,
         borderRadius: 16,
         overflow: 'hidden',
@@ -244,6 +317,9 @@ const getStyles = (colors: any) => StyleSheet.create({
         borderWidth: 2,
         borderColor: colors.border,
         borderStyle: 'dashed',
+    },
+    previewContainerTall: {
+        height: 450, // Taller for posters
     },
     image: {
         width: '100%',
