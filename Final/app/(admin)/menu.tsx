@@ -40,6 +40,19 @@ export default function MenuScreen() {
         setSelectedImage(null);
     }, [displayMode]);
 
+    // Fire and forget cleanup on mount
+    React.useEffect(() => {
+        const cleanup = async () => {
+            const { data, error } = await supabase.rpc('cleanup_old_menu_images');
+            if (error) {
+                console.log('Cleanup error:', error);
+            } else {
+                console.log('Cleanup result:', data);
+            }
+        };
+        cleanup();
+    }, []);
+
     // Fetch existing menu image for the selected meal type
     const { data: existingMenu, refetch } = useQuery({
         queryKey: ['admin_menu_image', mealType],
