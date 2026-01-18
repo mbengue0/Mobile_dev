@@ -1,4 +1,4 @@
-import { Slot, Stack, useRouter, useSegments } from 'expo-router';
+import { Slot, Stack, useRouter, useSegments, useRootNavigationState, usePathname } from 'expo-router';
 import { View } from 'react-native';
 import { QueryProvider } from '../providers/QueryProvider';
 import { AuthProvider, useAuth } from '../hooks/useAuth';
@@ -15,23 +15,27 @@ function AuthGuard() {
     const { session, loading } = useAuth();
     const segments = useSegments();
     const router = useRouter();
+    const pathname = usePathname();
+    const rootNavigationState = useRootNavigationState();
 
     // Initialize notifications
     useNotifications();
 
     useEffect(() => {
         if (loading) return;
+        if (!rootNavigationState?.key) return; // Wait for navigation to be ready
 
         const inAuthGroup = segments[0] === '(auth)';
+        const inPublicGroup = segments[0] === 'public' || pathname?.startsWith('/public');
 
-        if (!session && !inAuthGroup) {
-            // Redirect to login if not authenticated and not in auth group
+        if (!session && !inAuthGroup && !inPublicGroup) {
+            // Redirect to login if not authenticated and not in auth/public group
             router.replace('/(auth)/login');
         } else if (session && inAuthGroup) {
             // Redirect to home if authenticated and trying to access auth screens
             // router.replace('/'); // Optional: Auto-login logic handling
         }
-    }, [session, loading, segments]);
+    }, [session, loading, segments, rootNavigationState, pathname]);
 
     return (
         <AnimatedSplashScreen isLoading={loading}>
@@ -40,6 +44,7 @@ function AuthGuard() {
                 <Stack.Screen name="(student)" options={{ headerShown: false }} />
                 <Stack.Screen name="(admin)" options={{ headerShown: false }} />
                 <Stack.Screen name="(super_admin)" options={{ headerShown: false }} />
+                <Stack.Screen name="public" options={{ headerShown: false }} />
             </Stack>
         </AnimatedSplashScreen>
     );

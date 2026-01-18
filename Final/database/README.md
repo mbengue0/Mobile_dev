@@ -1,3 +1,8 @@
+# Database Documentation
+
+## Migrations
+- `010_daily_overview.sql`: Updates `menu_images` table constraint to allow `daily_overview` as a meal type.
+
 # Database Organization
 
 This folder contains all database-related SQL files in an organized structure.
