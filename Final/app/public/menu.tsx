@@ -49,7 +49,9 @@ export default function PublicMenuScreen() {
             }
 
             return null;
-        }
+        },
+        refetchInterval: 10000, // Poll every 10 seconds
+        refetchOnWindowFocus: true,
     });
 
     const openStoreLink = () => {
@@ -90,7 +92,7 @@ export default function PublicMenuScreen() {
                 {menuData.type === 'daily' ? (
                     <View style={styles.dailyPosterContainer}>
                         <Image
-                            source={{ uri: menuData.data.image_url }}
+                            source={{ uri: `${menuData.data.image_url}?t=${new Date().getTime()}` }}
                             style={styles.dailyPoster}
                             resizeMode="contain"
                         />
@@ -104,7 +106,7 @@ export default function PublicMenuScreen() {
                                     <Text style={styles.mealType}>{meal.meal_type.toUpperCase()}</Text>
                                 </View>
                                 <Image
-                                    source={{ uri: meal.image_url }}
+                                    source={{ uri: `${meal.image_url}?t=${new Date().getTime()}` }}
                                     style={styles.mealImage}
                                     resizeMode="cover"
                                 />

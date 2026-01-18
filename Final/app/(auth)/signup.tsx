@@ -19,9 +19,29 @@ export default function SignupScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [passwordError, setPasswordError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const { signUp } = useAuth();
     const router = useRouter();
+
+    const validatePassword = (text: string) => {
+        setPassword(text);
+        const hasNumber = /\d/;
+        const minLength = 6;
+
+        if (text.length === 0) {
+            setPasswordError(null); // Reset when empty, handling in handleSignup
+            return;
+        }
+
+        if (text.length < minLength) {
+            setPasswordError('Password must be at least 6 characters');
+        } else if (!hasNumber.test(text)) {
+            setPasswordError('Password must contain at least one number');
+        } else {
+            setPasswordError(null);
+        }
+    };
 
     const handleSignup = async () => {
         if (!email || !password || !fullName) {
@@ -29,8 +49,14 @@ export default function SignupScreen() {
             return;
         }
 
-        if (password.length < 6) {
-            Alert.alert('Weak Password', 'Password must be at least 6 characters');
+        if (passwordError) {
+            Alert.alert('Weak Password', passwordError);
+            return;
+        }
+
+        // Double check just in case
+        if (password.length < 6 || !/\d/.test(password)) {
+            Alert.alert('Weak Password', 'Password must be at least 6 characters and contain a number.');
             return;
         }
 
@@ -94,19 +120,24 @@ export default function SignupScreen() {
                         keyboardType="email-address"
                     />
 
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Password (min 6 characters)"
-                        placeholderTextColor="#999"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                    />
+                    <View>
+                        <TextInput
+                            style={[styles.input, passwordError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : {}]}
+                            placeholder="Password (min 6 characters and a number)"
+                            placeholderTextColor="#999"
+                            value={password}
+                            onChangeText={validatePassword}
+                            secureTextEntry
+                        />
+                        {passwordError ? (
+                            <Text style={{ color: '#FF4444', marginBottom: 12, marginLeft: 4, fontSize: 12 }}>{passwordError}</Text>
+                        ) : null}
+                    </View>
 
                     <TouchableOpacity
-                        style={styles.button}
+                        style={[styles.button, (loading || !!passwordError || !password) && { backgroundColor: '#ccc' }]}
                         onPress={handleSignup}
-                        disabled={loading}
+                        disabled={loading || !!passwordError || !password}
                     >
                         {loading ? (
                             <ActivityIndicator color="#fff" />
