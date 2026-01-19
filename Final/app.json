@@ -31,28 +31,12 @@
         "backgroundColor": "#132439"
       },
       "package": "com.kanteen.app",
-      "edgeToEdgeEnabled": true,
-      "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "NOTIFICATIONS",
-        "CAMERA",
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO"
-      ]
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/icon.png",
-          "color": "#FF4757",
-          "sounds": []
-        }
-      ],
       [
         "expo-camera",
         {
