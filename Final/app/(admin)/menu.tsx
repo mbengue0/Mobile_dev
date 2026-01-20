@@ -81,9 +81,8 @@ export default function MenuScreen() {
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
-            allowsEditing: true,
-            // Use different aspect ratio for Daily Poster (Portrait) vs Meals (Landscape)
-            aspect: displayMode === 'daily' ? [9, 16] : [4, 3],
+            allowsEditing: false,
+            // aspect: displayMode === 'daily' ? [9, 16] : [4, 3], // Disabled to allow full image
             quality: 0.7,
             base64: true,
         });
