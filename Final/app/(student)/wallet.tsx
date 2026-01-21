@@ -27,8 +27,8 @@ export default function WalletScreen() {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleTopUp = async () => {
-        if (!amount || isNaN(Number(amount)) || Number(amount) < 100) {
-            Alert.alert('Invalid Amount', 'Please enter a valid amount (Min 100 FCFA)');
+        if (!amount || isNaN(Number(amount)) || Number(amount) < 500) {
+            Alert.alert('Invalid Amount', 'Please enter a valid amount (Min 500 FCFA)');
             return;
         }
 
@@ -39,8 +39,18 @@ export default function WalletScreen() {
                 body: { amount: Number(amount) }
             });
 
-            if (error) throw error;
-            if (data.error) throw new Error(data.error);
+            if (error) {
+                console.error("Full Edge Function Error:", error);
+                let serverMsg = error.message || "Unknown server error";
+                try {
+                    const parsed = JSON.parse(error.message);
+                    if (parsed.error) serverMsg = parsed.error;
+                } catch (e) { }
+                throw new Error(serverMsg);
+            }
+            if (data?.error) {
+                throw new Error(data.error);
+            }
 
             // 2. Open Naboo Checkout
             if (data.url) {
@@ -60,7 +70,7 @@ export default function WalletScreen() {
             }
 
         } catch (error: any) {
-            console.error('Top Up Error:', error);
+            console.error('Top Up Error (Details):', error);
             Alert.alert('Top Up Failed', error.message || 'Something went wrong.');
         } finally {
             setIsProcessing(false);
@@ -128,7 +138,7 @@ export default function WalletScreen() {
                     </TouchableOpacity>
 
                     <Text style={styles.disclaimer}>
-                        Minimum deposit: 100 FCFA. Transactions are secured and processed instantly.
+                        Minimum deposit: 500 FCFA. Transactions are secured and processed instantly.
                     </Text>
                 </View>
 
