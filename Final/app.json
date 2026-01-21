@@ -48,7 +48,8 @@
         {
           "cameraPermission": "Allow Kanteen to access your camera to scan meal tickets."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

@@ -95,13 +95,20 @@ export default function StudentDashboard() {
                 </View>
             </View>
 
-            <View style={styles(colors).walletCard}>
+            <TouchableOpacity
+                style={styles(colors).walletCard}
+                onPress={() => router.push('/(student)/wallet')}
+            >
                 <View style={styles(colors).walletHeader}>
                     <Ionicons name="wallet" size={32} color={colors.primary} />
                     <Text style={styles(colors).walletLabel}>Wallet Balance</Text>
+                    <View style={{ flex: 1 }} />
+                    <View style={{ backgroundColor: colors.background, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
+                        <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 12 }}>+ Top Up</Text>
+                    </View>
                 </View>
                 <Text style={styles(colors).balance}>{profile.wallet_balance.toLocaleString()} FCFA</Text>
-            </View>
+            </TouchableOpacity>
 
             <View style={styles(colors).quickActions}>
                 <Text style={styles(colors).sectionTitle}>Quick Actions</Text>
