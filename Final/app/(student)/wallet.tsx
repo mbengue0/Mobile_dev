@@ -145,6 +145,21 @@ export default function WalletScreen() {
                     </Text>
                 </View>
 
+                {/* Offline Option */}
+                <View style={[styles.formContainer, { marginTop: 20, borderColor: colors.border, backgroundColor: 'transparent' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', marginRight: 15 }}>
+                            <Ionicons name="cash" size={24} color={colors.text} />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={[styles.sectionTitle, { fontSize: 16 }]}>Pay with Cash?</Text>
+                            <Text style={[styles.subtitle, { marginBottom: 0 }]}>
+                                Visit an authorized Admin Cashier to top up your wallet manually.
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+
             </ScrollView>
         </KeyboardAvoidingView>
     );
