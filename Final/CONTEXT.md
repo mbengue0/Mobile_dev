@@ -12,7 +12,8 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 ## 🛠️ Tech Stack & Versions
 - **Framework**: React Native (Expo SDK 54)
 - **Language**: TypeScript (Strict Mode)
-- **Backend**: Supabase (PostgreSQL, Auth, Realtime)
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime, Edge Functions)
+- **Payment Gateway**: NabooPay v2
 - **Navigation**: Expo Router v6
 - **State Management**: @tanstack/react-query v5
 - **Offline Support**: AsyncStorage + React Query Persist + NetInfo
@@ -38,7 +39,7 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 
 ### 👥 User Roles & Access
 3. **Student**:
-   - Digital Wallet (Balance, Transactions History)
+   - Digital Wallet (Balance, Transactions History, NabooPay Top-up)
    - Profile Management (View details, Logout)
    - Batch Ticket Purchase (Up to 10)
    - QR Ticket Generation
@@ -46,7 +47,7 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
    - Push Notifications (Purchase confirmation)
 2. **Admin**:
    - QR Scanner (Continuous, Time-window validated)
-   - Cashier Mode (Add funds)
+   - Cashier Mode (Add funds manually)
    - Menu Upload
    - Settings (Profile, Notifications)
 3. **Super Admin**:
@@ -59,6 +60,11 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - **Features**: Local alerts, Push token registration, Preference persistence.
 - **Events**: Ticket Purchase (Implemented).
 
+### 💳 Payments Infrastructure
+- **Gateway**: NabooPay v2
+- **Flow**: App -> Edge Function (`naboo-init`) -> Naboo Checkout -> Redirect (`naboo-redirect`) -> App (`kanteen://`).
+- **Security**: HTTPS bridge for deep links, Server-side API keys.
+
 ### ⚙️ System Architecture
 - **Offline-First**: Optimistic updates and caching via TanStack Query.
 - **Database**: Supabase PostgreSQL with RLS policies.
@@ -70,9 +76,16 @@ Build **Kanteen**, a white-label ready, offline-first mobile platform for univer
 - `app/_layout.tsx`: Root provider setup (Auth, Query, Notifications).
 - `components/AnimatedSplashScreen.tsx`: Branding entry point.
 - `services/NotificationService.ts`: Push notification logic.
+- `supabase/functions/naboo-init/`: Payment initiation logic.
 - `database/`: Schema and migrations.
 
 ## 📋 Recent Changelog
+
+### v1.0.4 - NabooPay Integration (Jan 2026)
+- **Feature**: Integrated NabooPay v2 for online wallet top-ups.
+- **Infrastructure**: Added Supabase Edge Functions for secure payment handling.
+- **UX**: Smart transaction history with "Visual Expiry" for pending items.
+- **Polish**: Explicit Tab Bar icons (Home, Wallet, Profile) and improved navigation.
 
 ### v1.0.3 - Admin Dark Mode (Jan 2025)
 - **Feature**: Dark Mode toggle in Admin Settings.

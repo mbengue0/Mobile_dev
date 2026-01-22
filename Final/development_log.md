@@ -101,8 +101,6 @@
 **Issue:** New brand assets were not appearing in Expo Go (showing default placeholder).
 **Action:** Performed `npx expo start --clear` to invalidate Metro bundler cache and force asset refresh.
 
-**Action:** Performed `npx expo start --clear` to invalidate Metro bundler cache and force asset refresh.
-
 ## 17. Splash Screen Unification
 **Issue:** "White Flash" during JS load caused visual disconnect from native Navy splash.
 **Solution:**
@@ -151,9 +149,6 @@
 - **Native Splash (app.json)**: Updated from `#003366` to `#132439`
 - **Animated Splash**: Already using `#132439`
 **Final Color Palette:**
-- Primary Background: `#132439` (Deep Navy Blue)
-- Accent: `#FFD700` (Gold)
-- Text: `#FFFFFF` (White), `#CCCCCC` (Light Grey)
 - Primary Background: `#132439` (Deep Navy Blue)
 - Accent: `#FFD700` (Gold)
 - Text: `#FFFFFF` (White), `#CCCCCC` (Light Grey)
@@ -216,7 +211,7 @@
 - **Wallet:** Themed dashboard cards, quick actions, and transaction list in `app/(student)/index.tsx`.
 - **Purchase:** Themed meal selection cards, quantity inputs, and receipts in `app/(student)/purchase.tsx`.
 - **Tickets:** Themed ticket list cards and QR code modal in `app/(student)/tickets.tsx`.
-- **Result**: Consistent Navy Blue/Gold theme across the entire application.
+- **Result:** Consistent Navy Blue/Gold theme across the entire application.
 
 ## 30. Dynamic Scanner UI
 **Action:** Replaced hardcoded meal times in Admin Scanner with dynamic DB values.
@@ -238,3 +233,27 @@
 - **Hook:** Updated `hooks/useSystemSettings.ts` to trigger `query.refetch()` whenever the screen gains focus (using `expo-router`'s `useFocusEffect`).
 - **Refactor:** `app/(student)/purchase.tsx` now consumes `useSystemSettings` instead of localized query logic, inheriting both Realtime and Auto-Refresh capabilities.
 - **Result:** Students and Admins will see updated prices/times immediately upon navigating to the screen, ensuring data is never stale.
+
+## 33. NabooPay v2 Integration (Wallet Top-Up)
+**Action:** Integrated NabooPay v2 API for digital wallet deposits.
+**Changes:**
+- **Backend (`naboo-init`):**
+    - Updated API endpoint to v2 (`/api/v2/transactions`).
+    - Fixed payload structure (method arrays, products list).
+    - Added "Lazy Cleanup": Automatically cancels old `pending` transactions before starting a new one.
+    - Escalated privileges using `supabaseAdmin` to ensure cleanup works (bypassing RLS).
+- **Backend (`naboo-redirect`):**
+    - Created HTTPS bridge to handle deep link redirection (`kanteen://`).
+- **Frontend (`wallet.tsx`):**
+    - Added input validation (Min 500 FCFA).
+    - Integrated `WebBrowser` for payment flow.
+
+## 34. Wallet UX Refinements (Visual Expiry)
+**Action:** Improved Transaction List UX to handle stale pending transactions.
+**Changes:**
+- **Frontend (`index.tsx`):**
+    - Filtered out `cancelled` transactions from the list.
+    - Implemented "Visual Expiry": Pending transactions > 30s behave as "Expired" (Gray/Italic).
+    - Added explicit "Home" tab to separate Dashboard from Wallet.
+- **Navigation:**
+    - Configured explicit Tab Bar icons for all 5 screens (Home, Tickets, Purchase, Wallet, Profile).

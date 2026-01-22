@@ -1,6 +1,6 @@
 # Kanteen - Campus Dining SaaS
 
-**Kanteen** is a white-label ready, offline-first mobile platform for university dining management, built with **Expo SDK 54** and **Supabase**.
+**Kanteen** is a white-label ready, offline-first mobile platform for institutional dining management, built with **Expo SDK 54** and **Supabase**.
 
 ## 🎯 Features
 
@@ -211,4 +211,4 @@ MIT
 
 ## 👥 Credits
 
-Built for DAUST University Cafeteria System
+Built as a Multi-Tenant SaaS for Institutional Dining Management
