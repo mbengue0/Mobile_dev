@@ -7,7 +7,6 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// @ts-ignore
 serve(async (req: Request) => {
     // Handle CORS
     if (req.method === 'OPTIONS') {
@@ -15,6 +14,8 @@ serve(async (req: Request) => {
     }
 
     try {
+        console.log("🚀 Naboo Init started");
+
         // 1. Authenticate User
         const supabaseClient = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
@@ -25,24 +26,44 @@ serve(async (req: Request) => {
         const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
 
         if (authError || !user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            console.error("❌ Auth Error:", authError);
+            return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 401,
             })
         }
 
-        const { amount } = await req.json()
+        console.log("👤 User ID found:", user.id);
 
-        if (!amount || amount < 100) { // Min amount check
-            return new Response(JSON.stringify({ error: 'Invalid amount (Minimum 100 FCFA)' }), {
+        // 1b. Fetch current balance (Required for balance_after constraint)
+        const { data: profileData, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('wallet_balance')
+            .eq('id', user.id)
+            .single();
+
+        if (profileError) {
+            console.error("❌ Profile Error:", profileError);
+            throw new Error("Failed to fetch user profile");
+        }
+
+        const currentBalance = profileData?.wallet_balance ?? 0;
+        console.log("💰 Current Balance:", currentBalance);
+
+        console.log("🔑 Checking API Keys...", Deno.env.get('NABOO_API_KEY') ? "Present" : "MISSING");
+
+        const { amount } = await req.json()
+        console.log("📦 Request Payload:", { amount });
+
+        if (!amount || amount < 500) { // Check min amount 500 per updated requirement
+            return new Response(JSON.stringify({ error: 'Invalid amount (Minimum 500 FCFA)' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 400,
             })
         }
 
         // 2. Anti-Spam / Cleanup Logic
-        // Check for existing pending transactions for this user
-        const { data: pendingTx } = await supabaseClient
+        const { data: pendingTx, error: fetchError } = await supabaseClient
             .from('wallet_transactions')
             .select('id, created_at')
             .eq('user_id', user.id)
@@ -51,8 +72,12 @@ serve(async (req: Request) => {
             .order('created_at', { ascending: false })
             .limit(1)
 
+        if (fetchError) {
+            console.error("⚠️ Failed to fetch pending tx:", fetchError);
+        }
+
         if (pendingTx && pendingTx.length > 0) {
-            // Cancel the old one
+            console.log("🧹 Cleaning up old pending transaction:", pendingTx[0].id);
             const oldTx = pendingTx[0];
             await supabaseClient
                 .from('wallet_transactions')
@@ -64,10 +89,6 @@ serve(async (req: Request) => {
         }
 
         // 3. Create New Transaction Record
-        // We need a Service Role client to write to wallet_transactions if RLS is strict, 
-        // OR ensure the user has INSERT permission for their own rows.
-        // Assuming user has permissions or we use Service Role for higher privilege operations.
-        // For safety, let's use Service Role for the DB operations to avoid RLS issues with 'pending' status if necessary.
         const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -84,36 +105,61 @@ serve(async (req: Request) => {
                 description: 'Online Top-Up (Pending)',
                 status: 'pending',
                 provider: 'naboopay',
-                external_reference: orderId
+                external_reference: orderId,
+                balance_after: currentBalance
             })
 
         if (insertError) {
+            console.error("❌ DB Insert Error:", insertError);
             throw insertError
         }
 
-        // 4. Call Naboo API
-        // Replace with actual Naboo API interactions
-        // This is a MOCK implementation as I don't have the real Naboo endpoint docs in context.
-        // User should replace this.
+        // 4. Call Naboo API (Real)
+        console.log("📡 Calling Naboo API...");
 
-        /* 
-        const nabooResponse = await fetch('https://api.naboo.pay/checkout', {
+        const payload = {
+            method_of_payment: ["wave", "orange_money"],
+            products: [{
+                name: "Wallet Top-up",
+                category: "digital_service",
+                amount: Number(amount),
+                quantity: 1,
+                description: "Kanteen Deposit"
+            }],
+            success_url: 'kanteen://wallet',
+            error_url: 'kanteen://wallet?status=error',
+            is_escrow: false,
+            is_merchant: false
+        };
+
+        console.log("📤 Sending Body:", JSON.stringify(payload));
+
+        const nabooResponse = await fetch('https://api.naboopay.com/api/v2/transactions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('NABOO_API_KEY')}` },
-            body: JSON.stringify({
-                order_id: orderId,
-                amount: amount,
-                currency: 'XOF',
-                return_url: 'kanteen://wallet', // Deep link back to app
-                cancel_url: 'kanteen://wallet',
-            })
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${Deno.env.get('NABOO_API_KEY')}`
+            },
+            body: JSON.stringify(payload)
         })
-        const nabooData = await nabooResponse.json()
-        const checkoutUrl = nabooData.checkout_url
-        */
 
-        // MOCK URL for Testing
-        const checkoutUrl = `https://checkout.naboo.pay/mock/${orderId}?amount=${amount}`
+        if (!nabooResponse.ok) {
+            const errorText = await nabooResponse.text();
+            console.error("❌ Naboo Error:", errorText);
+
+            // Try to parse error if JSON
+            try {
+                const errObj = JSON.parse(errorText);
+                throw new Error(errObj.message || `Naboo API Error: ${errorText}`);
+            } catch (e) {
+                throw new Error(`Naboo API Error: ${errorText}`);
+            }
+        }
+
+        const nabooData = await nabooResponse.json();
+        const checkoutUrl = nabooData.checkout_url;
+        console.log("✅ Checkout URL Generated:", checkoutUrl);
 
         return new Response(JSON.stringify({ url: checkoutUrl, orderId: orderId }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -121,9 +167,10 @@ serve(async (req: Request) => {
         })
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
+        console.error("🔥 CRITICAL FAILURE:", error.message);
+        return new Response(JSON.stringify({ error: error.message, details: "Check Supabase Logs" }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
+            status: 400, // Return 400 even for system errors so client can parse body easily? Or 500. User asked for JSON.
         })
     }
 })

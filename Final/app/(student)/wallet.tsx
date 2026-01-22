@@ -41,11 +41,14 @@ export default function WalletScreen() {
 
             if (error) {
                 console.error("Full Edge Function Error:", error);
+
+                // Try to parse the error body if available
                 let serverMsg = error.message || "Unknown server error";
                 try {
                     const parsed = JSON.parse(error.message);
                     if (parsed.error) serverMsg = parsed.error;
                 } catch (e) { }
+
                 throw new Error(serverMsg);
             }
             if (data?.error) {
@@ -71,7 +74,7 @@ export default function WalletScreen() {
 
         } catch (error: any) {
             console.error('Top Up Error (Details):', error);
-            Alert.alert('Top Up Failed', error.message || 'Something went wrong.');
+            Alert.alert("Payment Failed", error.message || "Unknown Error");
         } finally {
             setIsProcessing(false);
             setAmount('');
