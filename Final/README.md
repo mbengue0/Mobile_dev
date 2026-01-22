@@ -48,7 +48,8 @@
 
 - **Framework**: React Native (Expo SDK 54)
 - **Language**: TypeScript (Strict Mode)
-- **Backend**: Supabase (PostgreSQL, Auth, Realtime)
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime, Edge Functions)
+- **Payment Gateway**: NabooPay v2
 - **State Management**: @tanstack/react-query v5
 - **Offline Support**: AsyncStorage + React Query Persist
 - **Navigation**: Expo Router v6
@@ -99,6 +100,13 @@ npm start
 ```
 
 Scan the QR code with Expo Go app on your device.
+
+### 5. Deploy Edge Functions (Payments)
+
+```bash
+npx supabase functions deploy naboo-init --no-verify-jwt
+npx supabase functions deploy naboo-redirect --no-verify-jwt
+```
 
 ## 📁 Project Structure
 
@@ -157,6 +165,7 @@ Final/
 - `add_wallet_funds`: Admin-only wallet top-up
 - `promote_user`: Super admin-only role promotion
 - `cleanup_old_menu_images`: Auto-delete menus older than 7 days
+- `confirm_naboo_payment`: Webhook handler for secure payment confirmation
 
 ### Self-Healing Auth
 - Auto-create profile on signup via database trigger
@@ -167,7 +176,7 @@ Final/
 
 ### Student Flow
 1. **Sign Up**: Create account with email/password
-2. **Add Funds**: Visit admin cashier to top up wallet
+2. **Add Funds**: Top up via **Mobile Money (NabooPay)** or visit admin cashier
 3. **Buy Tickets**: Select meal type and quantity
 4. **Show QR**: Display ticket QR at cafeteria entrance
 5. **Offline**: View tickets even without internet
