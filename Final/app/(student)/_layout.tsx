@@ -12,9 +12,9 @@ export default function StudentLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Wallet',
+                    title: 'Home',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="wallet" size={size} color={color} />
+                        <Ionicons name="home" size={size} color={color} />
                     ),
                 }}
             />
@@ -33,6 +33,24 @@ export default function StudentLayout() {
                     title: 'Buy Tickets',
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="cart" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="wallet"
+                options={{
+                    title: 'Wallet',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="card" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="profile"
+                options={{
+                    title: 'Profile',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="person" size={size} color={color} />
                     ),
                 }}
             />
