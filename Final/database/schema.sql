@@ -307,6 +307,93 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Function 3.5: Bulk Purchase Tickets (Atomic Cart Checkout)
+CREATE OR REPLACE FUNCTION purchase_tickets_bulk(
+  p_student_id UUID,
+  p_items JSONB -- Array of {type, quantity, price, date}
+)
+RETURNS JSON AS $$
+DECLARE
+  v_balance INTEGER;
+  v_total_cost INTEGER := 0;
+  v_item JSONB;
+  v_qty INTEGER;
+  v_price INTEGER;
+  v_type TEXT;
+  v_date DATE;
+  v_desc_parts TEXT[] := ARRAY[]::TEXT[];
+  v_final_desc TEXT;
+  v_ticket_number TEXT;
+  v_qr_code TEXT;
+  v_i INTEGER;
+BEGIN
+  -- 1. Calculate Total Cost & Build Description
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_qty := (v_item->>'quantity')::INTEGER;
+    v_price := (v_item->>'price')::INTEGER;
+    v_type := v_item->>'type';
+    
+    IF v_qty > 0 THEN
+      v_total_cost := v_total_cost + (v_price * v_qty);
+      v_desc_parts := array_append(v_desc_parts, v_qty || ' ' || v_type);
+    END IF;
+  END LOOP;
+
+  IF v_total_cost = 0 THEN
+    RETURN json_build_object('success', false, 'error', 'Cart is empty');
+  END IF;
+
+  v_final_desc := 'Purchase: ' || array_to_string(v_desc_parts, ', ');
+
+  -- 2. Lock & Check Balance
+  SELECT wallet_balance INTO v_balance 
+  FROM profiles 
+  WHERE id = p_student_id 
+  FOR UPDATE;
+  
+  IF v_balance IS NULL THEN 
+    RETURN json_build_object('success', false, 'error', 'User not found'); 
+  END IF;
+  
+  IF v_balance < v_total_cost THEN 
+    RETURN json_build_object('success', false, 'error', 'Insufficient funds'); 
+  END IF;
+
+  -- 3. Deduct Balance
+  UPDATE profiles 
+  SET wallet_balance = wallet_balance - v_total_cost 
+  WHERE id = p_student_id;
+
+  -- 4. Insert Tickets
+  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
+  LOOP
+    v_qty := (v_item->>'quantity')::INTEGER;
+    v_price := (v_item->>'price')::INTEGER;
+    v_type := v_item->>'type';
+    v_date := (v_item->>'date')::DATE;
+    
+    FOR v_i IN 1..v_qty LOOP
+      v_ticket_number := 'TKT-' || TO_CHAR(now(), 'YYYYMMDD') || '-' || LPAD(floor(random() * 10000)::text, 4, '0');
+      v_qr_code := uuid_generate_v4()::text;
+      
+      INSERT INTO tickets (ticket_number, student_id, meal_type, meal_date, price, qr_code_data, status)
+      VALUES (v_ticket_number, p_student_id, v_type, v_date, v_price, v_qr_code, 'active');
+    END LOOP;
+  END LOOP;
+
+  -- 5. Record Transaction
+  INSERT INTO wallet_transactions (user_id, amount, transaction_type, description, balance_after)
+  VALUES (p_student_id, -v_total_cost, 'purchase', v_final_desc, v_balance - v_total_cost);
+
+  RETURN json_build_object(
+    'success', true, 
+    'new_balance', v_balance - v_total_cost,
+    'message', 'Successfully purchased tickets'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Function 4: Promote User to Admin (Super Admin Only)
 CREATE OR REPLACE FUNCTION promote_user(target_user_id UUID)
 RETURNS JSON AS $$

@@ -4,7 +4,6 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    TextInput,
     Alert,
     ScrollView,
     ActivityIndicator,
@@ -22,49 +21,30 @@ import { useSystemSettings } from '../../hooks/useSystemSettings';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner';
 
-interface MealPrices {
+interface CartState {
     breakfast: number;
     lunch: number;
     dinner: number;
 }
 
-interface MealTimes {
-    breakfast: { start: number; end: number };
-    lunch: { start: number; end: number };
-    dinner: { start: number; end: number };
-}
-
 export default function PurchaseScreen() {
     const { user, profile, refreshProfile } = useAuth();
-    const [selectedMeal, setSelectedMeal] = useState<MealType>('lunch');
-    const [quantity, setQuantity] = useState('1');
+    const [cart, setCart] = useState<CartState>({ breakfast: 0, lunch: 0, dinner: 0 });
     const [imageError, setImageError] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
     const { sendNotification } = useNotifications();
     const { colors } = useTheme();
 
-    // Fetch dynamic system settings via centralized hook
+    // Fetch dynamic system settings
     const { data: systemSettings, isLoading: settingsLoading } = useSystemSettings();
 
-    const currentPrice = systemSettings?.mealPrices?.[selectedMeal] || 0;
-
     const { data: menuImage, refetch: refetchMenu } = useQuery({
-        queryKey: ['menu_image', selectedMeal],
+        queryKey: ['menu_image', 'daily_overview'],
         queryFn: async () => {
             const today = new Date().toISOString().split('T')[0];
 
-            // 1. Try to get Today's Specific Meal Image
-            const { data: specificMeal, error: specificError } = await supabase
-                .from('menu_images')
-                .select('image_url, menu_date, meal_type')
-                .eq('meal_type', selectedMeal)
-                .eq('menu_date', today)
-                .single();
-
-            if (specificMeal) return { ...specificMeal, isDaily: false };
-
-            // 2. Fallback: Try to get Today's "Daily Overview" Poster
+            // Try to get Today's "Daily Overview" Poster
             const { data: dailyOverview } = await supabase
                 .from('menu_images')
                 .select('image_url, menu_date, meal_type')
@@ -74,24 +54,19 @@ export default function PurchaseScreen() {
 
             if (dailyOverview) return { ...dailyOverview, isDaily: true };
 
-            // 3. Last Resort: Most Recent Specific Meal (e.g. yesterday)
+            // Fallback: Most Recent Daily Overview
             const { data: recentMenu } = await supabase
                 .from('menu_images')
                 .select('image_url, menu_date, meal_type')
-                .eq('meal_type', selectedMeal)
+                .eq('meal_type', 'daily_overview')
                 .gte('menu_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
                 .order('menu_date', { ascending: false })
                 .limit(1)
                 .single();
 
-            return recentMenu ? { ...recentMenu, isDaily: false } : null;
+            return recentMenu ? { ...recentMenu, isDaily: true } : null;
         },
     });
-
-    // Reset error when meal type changes
-    React.useEffect(() => {
-        setImageError(false);
-    }, [selectedMeal]);
 
     const [refreshing, setRefreshing] = useState(false);
 
@@ -105,41 +80,34 @@ export default function PurchaseScreen() {
     }, [refetchMenu, refreshProfile]);
 
     const purchaseMutation = useMutation({
-        mutationFn: async ({ mealType, qty }: { mealType: MealType; qty: number }) => {
-            const results = [];
-            const price = systemSettings?.mealPrices?.[mealType] || 0;
+        mutationFn: async (items: Array<{ type: MealType; quantity: number; price: number; date: string }>) => {
+            const { data, error } = await supabase.rpc('purchase_tickets_bulk', {
+                p_student_id: user?.id,
+                p_items: items,
+            });
 
-            for (let i = 0; i < qty; i++) {
-                const { data, error } = await supabase.rpc('purchase_ticket', {
-                    p_student_id: user?.id,
-                    p_meal_type: mealType,
-                    p_meal_date: new Date().toISOString().split('T')[0],
-                    p_price: price,
-                });
-
-                if (error) throw error;
-                if (!data.success) throw new Error(data.error);
-                results.push(data);
-            }
-
-            return results;
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            return data;
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['tickets', user?.id] });
             refreshProfile();
 
+            // Calculate total items
+            const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
             // Send notification
-            const qty = parseInt(quantity) || 1;
             sendNotification(
-                'Ticket Purchased! 🎫',
-                `Your ${selectedMeal} ticket${qty > 1 ? 's' : ''} ${qty > 1 ? 'are' : 'is'} ready to use`,
+                'Tickets Purchased! 🎫',
+                `Your ${totalItems} ticket${totalItems > 1 ? 's are' : ' is'} ready to use`,
                 'ticket_purchase',
-                { meal_type: selectedMeal, quantity: qty }
+                { cart }
             );
 
             Alert.alert(
                 'Success!',
-                `Successfully purchased ${quantity} ticket(s)`,
+                `Successfully purchased ${totalItems} ticket(s)`,
                 [
                     {
                         text: 'View Tickets',
@@ -148,28 +116,35 @@ export default function PurchaseScreen() {
                     { text: 'OK' },
                 ]
             );
-            setQuantity('1');
+
+            // Clear cart
+            setCart({ breakfast: 0, lunch: 0, dinner: 0 });
         },
         onError: (error: any) => {
             Alert.alert('Purchase Failed', error.message || 'An error occurred');
         },
     });
 
-    const handlePurchase = () => {
+    const handleCheckout = () => {
         setImageError(false);
-        const qty = parseInt(quantity);
 
-        if (isNaN(qty) || qty < 1) {
-            Alert.alert('Invalid Quantity', 'Please enter a valid number');
+        // Build items array
+        const items = (Object.keys(cart) as MealType[])
+            .filter(mealType => cart[mealType] > 0)
+            .map(mealType => ({
+                type: mealType,
+                quantity: cart[mealType],
+                price: systemSettings?.mealPrices?.[mealType] || 0,
+                date: new Date().toISOString().split('T')[0],
+            }));
+
+        if (items.length === 0) {
+            Alert.alert('Empty Cart', 'Please add at least one ticket to your cart');
             return;
         }
 
-        if (qty > 10) {
-            Alert.alert('Limit Exceeded', 'Maximum 10 tickets per purchase');
-            return;
-        }
-
-        const totalCost = qty * currentPrice;
+        const totalCost = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
         if (!profile || profile.wallet_balance < totalCost) {
             Alert.alert(
@@ -179,17 +154,27 @@ export default function PurchaseScreen() {
             return;
         }
 
+        // Build summary for confirmation
+        const summary = items.map(item => `${item.quantity} ${item.type}`).join(', ');
+
         Alert.alert(
             'Confirm Purchase',
-            `Buy ${qty} ${selectedMeal} ticket(s) for ${totalCost} FCFA?`,
+            `Buy ${summary} for ${totalCost} FCFA?`,
             [
                 { text: 'Cancel', style: 'cancel' },
                 {
                     text: 'Confirm',
-                    onPress: () => purchaseMutation.mutate({ mealType: selectedMeal, qty }),
+                    onPress: () => purchaseMutation.mutate(items),
                 },
             ]
         );
+    };
+
+    const updateCart = (mealType: MealType, delta: number) => {
+        setCart(prev => {
+            const newQty = Math.max(0, Math.min(10, prev[mealType] + delta));
+            return { ...prev, [mealType]: newQty };
+        });
     };
 
     const getMealIcon = (mealType: MealType) => {
@@ -219,145 +204,146 @@ export default function PurchaseScreen() {
 
     const meals: MealType[] = ['breakfast', 'lunch', 'dinner'];
 
+    const totalItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+    const totalCost = meals.reduce((sum, meal) =>
+        sum + (cart[meal] * (systemSettings?.mealPrices?.[meal] || 0)), 0
+    );
+
     return (
-        <ScrollView
-            style={styles(colors).container}
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-            }
-        >
-            <View style={styles(colors).walletInfo}>
-                <Text style={styles(colors).walletLabel}>Available Balance</Text>
-                <Text style={styles(colors).walletBalance}>{profile?.wallet_balance || 0} FCFA</Text>
-            </View>
-
-            {menuImage?.image_url && (
-                <View style={styles(colors).menuPreview}>
-                    <Text style={styles(colors).menuTitle}>
-                        {menuImage.isDaily
-                            ? "Daily Menu Overview"
-                            : `Today's ${selectedMeal.charAt(0).toUpperCase() + selectedMeal.slice(1)}`
-                        }
-                    </Text>
-                    {imageError ? (
-                        <View style={[styles(colors).menuImage, styles(colors).errorContainer]}>
-                            <Ionicons name="image-outline" size={48} color={colors.textSecondary} />
-                            <Text style={styles(colors).errorText}>Could not load image</Text>
-                        </View>
-                    ) : (
-                        <Image
-                            source={{ uri: menuImage.image_url }}
-                            style={styles(colors).menuImage}
-                            resizeMode="cover"
-                            onError={() => setImageError(true)}
-                        />
-                    )}
+        <View style={styles(colors).container}>
+            <ScrollView
+                style={styles(colors).scrollView}
+                contentContainerStyle={styles(colors).scrollContent}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+                }
+            >
+                <View style={styles(colors).walletInfo}>
+                    <Text style={styles(colors).walletLabel}>Available Balance</Text>
+                    <Text style={styles(colors).walletBalance}>{profile?.wallet_balance || 0} FCFA</Text>
                 </View>
-            )}
 
-            <View style={styles(colors).section}>
-                <Text style={styles(colors).sectionTitle}>Select Meal Type</Text>
-                {meals.map((meal) => (
-                    <TouchableOpacity
-                        key={meal}
-                        style={[
-                            styles(colors).mealCard,
-                            selectedMeal === meal && styles(colors).mealCardSelected,
-                        ]}
-                        onPress={() => setSelectedMeal(meal)}
-                    >
-                        <View style={styles(colors).mealInfo}>
-                            <Ionicons
-                                name={getMealIcon(meal)}
-                                size={32}
-                                color={selectedMeal === meal ? colors.primary : colors.textSecondary}
+                {menuImage?.image_url && (
+                    <View style={styles(colors).menuPreview}>
+                        <Text style={styles(colors).menuTitle}>
+                            {menuImage.isDaily ? "Today's Menu" : "Menu Preview"}
+                        </Text>
+                        {imageError ? (
+                            <View style={[styles(colors).menuImage, styles(colors).errorContainer]}>
+                                <Ionicons name="image-outline" size={48} color={colors.textSecondary} />
+                                <Text style={styles(colors).errorText}>Could not load image</Text>
+                            </View>
+                        ) : (
+                            <Image
+                                source={{ uri: menuImage.image_url }}
+                                style={styles(colors).menuImage}
+                                resizeMode="cover"
+                                onError={() => setImageError(true)}
                             />
-                            <View style={styles(colors).mealText}>
-                                <Text
-                                    style={[
-                                        styles(colors).mealName,
-                                        selectedMeal === meal && styles(colors).mealNameSelected,
-                                    ]}
+                        )}
+                    </View>
+                )}
+
+                <View style={styles(colors).section}>
+                    <Text style={styles(colors).sectionTitle}>Select Meals</Text>
+                    <Text style={styles(colors).subtitle}>Add items to your cart</Text>
+
+                    {meals.map((meal) => (
+                        <View
+                            key={meal}
+                            style={[
+                                styles(colors).mealCard,
+                                cart[meal] > 0 && styles(colors).mealCardActive,
+                            ]}
+                        >
+                            <View style={styles(colors).mealInfo}>
+                                <Ionicons
+                                    name={getMealIcon(meal)}
+                                    size={32}
+                                    color={cart[meal] > 0 ? colors.primary : colors.textSecondary}
+                                />
+                                <View style={styles(colors).mealText}>
+                                    <Text
+                                        style={[
+                                            styles(colors).mealName,
+                                            cart[meal] > 0 && styles(colors).mealNameActive,
+                                        ]}
+                                    >
+                                        {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                                    </Text>
+                                    <Text style={styles(colors).mealTime}>{getMealTime(meal)}</Text>
+                                    <Text style={styles(colors).mealPrice}>
+                                        {systemSettings?.mealPrices?.[meal] || 0} FCFA
+                                    </Text>
+                                </View>
+                            </View>
+
+                            <View style={styles(colors).stepperContainer}>
+                                <TouchableOpacity
+                                    style={styles(colors).stepperButton}
+                                    onPress={() => updateCart(meal, -1)}
+                                    disabled={cart[meal] === 0}
                                 >
-                                    {meal.charAt(0).toUpperCase() + meal.slice(1)} ({systemSettings?.mealPrices?.[meal] || 0} FCFA)
-                                </Text>
-                                <Text style={styles(colors).mealTime}>{getMealTime(meal)}</Text>
+                                    <Ionicons
+                                        name="remove"
+                                        size={20}
+                                        color={cart[meal] === 0 ? colors.textSecondary : colors.primary}
+                                    />
+                                </TouchableOpacity>
+
+                                <Text style={styles(colors).stepperValue}>{cart[meal]}</Text>
+
+                                <TouchableOpacity
+                                    style={styles(colors).stepperButton}
+                                    onPress={() => updateCart(meal, 1)}
+                                    disabled={cart[meal] >= 10}
+                                >
+                                    <Ionicons
+                                        name="add"
+                                        size={20}
+                                        color={cart[meal] >= 10 ? colors.textSecondary : colors.primary}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
-                        {selectedMeal === meal && (
-                            <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+                    ))}
+
+                    <Text style={styles(colors).hint}>Maximum 10 tickets per meal type</Text>
+                </View>
+
+                {/* Spacer for floating footer */}
+                <View style={{ height: 100 }} />
+            </ScrollView>
+
+            {/* Floating Checkout Footer */}
+            {totalItems > 0 && (
+                <View style={styles(colors).floatingFooter}>
+                    <View style={styles(colors).footerInfo}>
+                        <Text style={styles(colors).footerItems}>
+                            {totalItems} Item{totalItems > 1 ? 's' : ''}
+                        </Text>
+                        <Text style={styles(colors).footerTotal}>{totalCost} FCFA</Text>
+                    </View>
+                    <TouchableOpacity
+                        style={[
+                            styles(colors).checkoutButton,
+                            purchaseMutation.isPending && styles(colors).checkoutButtonDisabled,
+                        ]}
+                        onPress={handleCheckout}
+                        disabled={purchaseMutation.isPending}
+                    >
+                        {purchaseMutation.isPending ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <>
+                                <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
+                                <Text style={styles(colors).checkoutButtonText}>Checkout</Text>
+                            </>
                         )}
                     </TouchableOpacity>
-                ))}
-            </View>
-
-            <View style={styles(colors).section}>
-                <Text style={styles(colors).sectionTitle}>Quantity</Text>
-                <View style={styles(colors).quantityContainer}>
-                    <TouchableOpacity
-                        style={styles(colors).quantityButton}
-                        onPress={() => {
-                            const current = parseInt(quantity) || 1;
-                            if (current > 1) setQuantity(String(current - 1));
-                        }}
-                    >
-                        <Ionicons name="remove" size={24} color={colors.primary} />
-                    </TouchableOpacity>
-
-                    <TextInput
-                        style={styles(colors).quantityInput}
-                        value={quantity}
-                        onChangeText={setQuantity}
-                        keyboardType="number-pad"
-                        maxLength={2}
-                        placeholderTextColor={colors.textSecondary}
-                    />
-
-                    <TouchableOpacity
-                        style={styles(colors).quantityButton}
-                        onPress={() => {
-                            const current = parseInt(quantity) || 1;
-                            if (current < 10) setQuantity(String(current + 1));
-                        }}
-                    >
-                        <Ionicons name="add" size={24} color={colors.primary} />
-                    </TouchableOpacity>
                 </View>
-                <Text style={styles(colors).hint}>Maximum 10 tickets per purchase</Text>
-            </View>
-
-            <View style={styles(colors).summary}>
-                <View style={styles(colors).summaryRow}>
-                    <Text style={styles(colors).summaryLabel}>Price per ticket:</Text>
-                    <Text style={styles(colors).summaryValue}>{currentPrice} FCFA</Text>
-                </View>
-                <View style={styles(colors).summaryRow}>
-                    <Text style={styles(colors).summaryLabel}>Quantity:</Text>
-                    <Text style={styles(colors).summaryValue}>{quantity}</Text>
-                </View>
-                <View style={[styles(colors).summaryRow, styles(colors).totalRow]}>
-                    <Text style={styles(colors).totalLabel}>Total:</Text>
-                    <Text style={styles(colors).totalValue}>
-                        {(parseInt(quantity) || 0) * currentPrice} FCFA
-                    </Text>
-                </View>
-            </View>
-
-            <TouchableOpacity
-                style={[
-                    styles(colors).purchaseButton,
-                    purchaseMutation.isPending && styles(colors).purchaseButtonDisabled,
-                ]}
-                onPress={handlePurchase}
-                disabled={purchaseMutation.isPending}
-            >
-                {purchaseMutation.isPending ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles(colors).purchaseButtonText}>Purchase Tickets</Text>
-                )}
-            </TouchableOpacity>
-        </ScrollView>
+            )}
+        </View>
     );
 }
 
@@ -365,6 +351,12 @@ const styles = (colors: any) => StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: 20,
     },
     walletInfo: {
         backgroundColor: colors.primary,
@@ -422,10 +414,15 @@ const styles = (colors: any) => StyleSheet.create({
         padding: 20,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: '600',
-        marginBottom: 15,
+        marginBottom: 5,
         color: colors.text,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: colors.textSecondary,
+        marginBottom: 15,
     },
     mealCard: {
         backgroundColor: colors.card,
@@ -438,23 +435,25 @@ const styles = (colors: any) => StyleSheet.create({
         borderWidth: 2,
         borderColor: 'transparent',
     },
-    mealCardSelected: {
+    mealCardActive: {
         borderColor: colors.primary,
         backgroundColor: colors.background,
     },
     mealInfo: {
         flexDirection: 'row',
         alignItems: 'center',
+        flex: 1,
     },
     mealText: {
         marginLeft: 15,
+        flex: 1,
     },
     mealName: {
         fontSize: 16,
         fontWeight: 'bold',
         color: colors.text,
     },
-    mealNameSelected: {
+    mealNameActive: {
         color: colors.primary,
     },
     mealTime: {
@@ -462,33 +461,35 @@ const styles = (colors: any) => StyleSheet.create({
         color: colors.textSecondary,
         marginTop: 2,
     },
-    quantityContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.card,
-        borderRadius: 12,
-        padding: 10,
-        borderWidth: 1,
-        borderColor: colors.border,
+    mealPrice: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.text,
+        marginTop: 4,
     },
-    quantityButton: {
-        width: 50,
-        height: 50,
-        justifyContent: 'center',
+    stepperContainer: {
+        flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: colors.background,
         borderRadius: 8,
+        padding: 4,
         borderWidth: 1,
         borderColor: colors.border,
     },
-    quantityInput: {
-        fontSize: 24,
+    stepperButton: {
+        width: 36,
+        height: 36,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 6,
+    },
+    stepperValue: {
+        fontSize: 18,
         fontWeight: 'bold',
-        textAlign: 'center',
-        marginHorizontal: 30,
-        minWidth: 60,
         color: colors.text,
+        marginHorizontal: 12,
+        minWidth: 30,
+        textAlign: 'center',
     },
     hint: {
         fontSize: 12,
@@ -496,57 +497,51 @@ const styles = (colors: any) => StyleSheet.create({
         textAlign: 'center',
         marginTop: 10,
     },
-    summary: {
+    floatingFooter: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
         backgroundColor: colors.card,
-        margin: 20,
-        marginTop: 0,
-        padding: 20,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-    summaryRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 10,
-    },
-    summaryLabel: {
-        fontSize: 14,
-        color: colors.textSecondary,
-    },
-    summaryValue: {
-        fontSize: 14,
-        color: colors.text,
-        fontWeight: '500',
-    },
-    totalRow: {
         borderTopWidth: 1,
         borderTopColor: colors.border,
-        paddingTop: 10,
-        marginTop: 5,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 8,
     },
-    totalLabel: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: colors.text,
+    footerInfo: {
+        flex: 1,
     },
-    totalValue: {
-        fontSize: 18,
+    footerItems: {
+        fontSize: 14,
+        color: colors.textSecondary,
+        marginBottom: 2,
+    },
+    footerTotal: {
+        fontSize: 20,
         fontWeight: 'bold',
         color: colors.primary,
     },
-    purchaseButton: {
+    checkoutButton: {
         backgroundColor: colors.primary,
-        margin: 20,
-        marginTop: 0,
-        padding: 18,
-        borderRadius: 12,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 10,
+        flexDirection: 'row',
         alignItems: 'center',
+        minWidth: 140,
+        justifyContent: 'center',
     },
-    purchaseButtonDisabled: {
+    checkoutButtonDisabled: {
         opacity: 0.6,
     },
-    purchaseButtonText: {
+    checkoutButtonText: {
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
