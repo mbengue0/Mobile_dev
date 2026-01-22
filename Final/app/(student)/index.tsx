@@ -19,6 +19,7 @@ interface Transaction {
     amount: number;
     transaction_type: 'deposit' | 'purchase';
     description: string;
+    status: string;
     created_at: string;
 }
 
@@ -38,6 +39,7 @@ export default function StudentDashboard() {
                 .from('wallet_transactions')
                 .select('*')
                 .eq('user_id', profile.id)
+                .neq('status', 'cancelled') // Hide cancelled transactions
                 .order('created_at', { ascending: false })
                 .limit(5);
 
@@ -162,6 +164,24 @@ export default function StudentDashboard() {
                             ]}>
                                 {tx.transaction_type === 'deposit' ? '+' : ''}{tx.amount} FCFA
                             </Text>
+                            {/* Visual indicator for Pending/Expired */}
+                            {(tx as any).status === 'pending' && (() => {
+                                const created = new Date(tx.created_at).getTime();
+                                const now = new Date().getTime();
+                                // 30 seconds expiry for testing (30 * 1000)
+                                const isExpired = (now - created) > 1 * 30 * 1000;
+
+                                return (
+                                    <Text style={{
+                                        fontSize: 10,
+                                        color: isExpired ? colors.textSecondary : '#f39c12',
+                                        marginLeft: 5,
+                                        fontStyle: isExpired ? 'italic' : 'normal'
+                                    }}>
+                                        ({isExpired ? 'Expired' : 'Pending'})
+                                    </Text>
+                                );
+                            })()}
                         </View>
                     ))
                 )}

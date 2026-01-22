@@ -50,6 +50,12 @@ serve(async (req: Request) => {
         const currentBalance = profileData?.wallet_balance ?? 0;
         console.log("💰 Current Balance:", currentBalance);
 
+        // 2. Initialize Admin Client (Required for privileged cleanup)
+        const supabaseAdmin = createClient(
+            Deno.env.get('SUPABASE_URL') ?? '',
+            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        )
+
         console.log("🔑 Checking API Keys...", Deno.env.get('NABOO_API_KEY') ? "Present" : "MISSING");
 
         const { amount } = await req.json()
@@ -62,38 +68,43 @@ serve(async (req: Request) => {
             })
         }
 
-        // 2. Anti-Spam / Cleanup Logic
-        const { data: pendingTx, error: fetchError } = await supabaseClient
+        // 2b. Anti-Spam / Cleanup Logic (Use Admin Client to bypass RLS)
+        // Find ALL pending deposit transactions for this user
+        const { data: pendingTxs, error: fetchError } = await supabaseAdmin
             .from('wallet_transactions')
             .select('id, created_at')
             .eq('user_id', user.id)
             .eq('status', 'pending')
-            .eq('provider', 'naboopay')
-            .order('created_at', { ascending: false })
-            .limit(1)
+            .eq('transaction_type', 'deposit');
 
         if (fetchError) {
-            console.error("⚠️ Failed to fetch pending tx:", fetchError);
+            console.error("⚠️ Failed to fetch pending txs:", fetchError);
         }
 
-        if (pendingTx && pendingTx.length > 0) {
-            console.log("🧹 Cleaning up old pending transaction:", pendingTx[0].id);
-            const oldTx = pendingTx[0];
-            await supabaseClient
-                .from('wallet_transactions')
-                .update({
-                    status: 'cancelled',
-                    description: 'User started a new payment (Auto-cancelled)'
-                })
-                .eq('id', oldTx.id)
+        if (pendingTxs && pendingTxs.length > 0) {
+            console.log("🧹 Cleaning up old pending transactions:", pendingTxs.length, "IDs:", pendingTxs.map(t => t.id));
+
+            // Loop through all found pending transactions
+            for (const tx of pendingTxs) {
+                const { error: updateError } = await supabaseAdmin
+                    .from('wallet_transactions')
+                    .update({
+                        status: 'cancelled',
+                        description: 'User started a new payment (Auto-cancelled)'
+                    })
+                    .eq('id', tx.id);
+
+                if (updateError) {
+                    console.error("❌ Failed to cleanup tx:", tx.id, updateError);
+                } else {
+                    console.log("✅ Cancelled old tx:", tx.id);
+                }
+            }
+        } else {
+            console.log("✅ No pending transactions found to cleanup.");
         }
 
         // 3. Create New Transaction Record
-        const supabaseAdmin = createClient(
-            Deno.env.get('SUPABASE_URL') ?? '',
-            Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        )
-
         const orderId = `order_${user.id.split('-')[0]}_${Date.now()}` // Simple unique ref
 
         const { error: insertError } = await supabaseAdmin
@@ -122,12 +133,12 @@ serve(async (req: Request) => {
             products: [{
                 name: "Wallet Top-up",
                 category: "digital_service",
-                amount: Number(amount),
+                price: Number(amount), // Changed from 'amount' to 'price'
                 quantity: 1,
                 description: "Kanteen Deposit"
             }],
-            success_url: 'kanteen://wallet',
-            error_url: 'kanteen://wallet?status=error',
+            success_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/naboo-redirect?status=success`,
+            error_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/naboo-redirect?status=error`,
             is_escrow: false,
             is_merchant: false
         };
