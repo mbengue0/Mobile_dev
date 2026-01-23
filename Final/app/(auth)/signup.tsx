@@ -100,7 +100,7 @@ export default function SignupScreen() {
                         resizeMode="contain"
                     />
                     <Text style={styles.title}>{t('auth.signup')}</Text>
-                    <Text style={styles.subtitle}>Smart Campus Dining</Text>
+                    <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
                 </View>
 
                 {/* Form Section */}

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 interface Transaction {
     id: string;
@@ -27,6 +28,7 @@ export default function StudentDashboard() {
     const { profile, refreshProfile } = useAuth();
     const router = useRouter();
     const { colors } = useTheme();
+    const { t, i18n } = useTranslation();
     const [refreshing, setRefreshing] = React.useState(false);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loadingTransactions, setLoadingTransactions] = useState(true);
@@ -75,7 +77,7 @@ export default function StudentDashboard() {
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString(i18n.language) + ' ' + date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
@@ -88,8 +90,8 @@ export default function StudentDashboard() {
             <View style={styles(colors).header}>
                 <View style={styles(colors).headerTop}>
                     <View>
-                        <Text style={styles(colors).greeting}>Welcome, {profile.full_name?.split(' ')[0]}!</Text>
-                        <Text style={styles(colors).studentId}>ID: {profile.student_id}</Text>
+                        <Text style={styles(colors).greeting}>{t('common.welcome')}, {profile.full_name?.split(' ')[0]}!</Text>
+                        <Text style={styles(colors).studentId}>{t('auth.studentId')}: {profile.student_id}</Text>
                     </View>
                     <TouchableOpacity onPress={() => router.push('/(student)/profile')}>
                         <Ionicons name="person-circle" size={40} color="#fff" />
@@ -103,17 +105,17 @@ export default function StudentDashboard() {
             >
                 <View style={styles(colors).walletHeader}>
                     <Ionicons name="wallet" size={32} color={colors.primary} />
-                    <Text style={styles(colors).walletLabel}>Wallet Balance</Text>
+                    <Text style={styles(colors).walletLabel}>{t('wallet.balance')}</Text>
                     <View style={{ flex: 1 }} />
                     <View style={{ backgroundColor: colors.background, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}>
-                        <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 12 }}>+ Top Up</Text>
+                        <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 12 }}>+ {t('wallet.topUpShort')}</Text>
                     </View>
                 </View>
                 <Text style={styles(colors).balance}>{profile.wallet_balance.toLocaleString()} FCFA</Text>
             </TouchableOpacity>
 
             <View style={styles(colors).quickActions}>
-                <Text style={styles(colors).sectionTitle}>Quick Actions</Text>
+                <Text style={styles(colors).sectionTitle}>{t('common.quickActions')}</Text>
 
                 <View style={styles(colors).actionRow}>
                     <TouchableOpacity
@@ -121,7 +123,7 @@ export default function StudentDashboard() {
                         onPress={() => router.push('/(student)/purchase')}
                     >
                         <Ionicons name="cart" size={28} color={colors.primary} />
-                        <Text style={styles(colors).actionText}>Buy Tickets</Text>
+                        <Text style={styles(colors).actionText}>{t('navigation.buyTickets')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -129,18 +131,18 @@ export default function StudentDashboard() {
                         onPress={() => router.push('/(student)/tickets')}
                     >
                         <Ionicons name="ticket" size={28} color={colors.primary} />
-                        <Text style={styles(colors).actionText}>My Tickets</Text>
+                        <Text style={styles(colors).actionText}>{t('navigation.tickets')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
 
             <View style={styles(colors).transactionsSection}>
-                <Text style={styles(colors).sectionTitle}>Recent Activity</Text>
+                <Text style={styles(colors).sectionTitle}>{t('wallet.transactions')}</Text>
 
                 {loadingTransactions ? (
                     <ActivityIndicator size="small" color={colors.textSecondary} />
                 ) : transactions.length === 0 ? (
-                    <Text style={styles(colors).emptyText}>No recent transactions</Text>
+                    <Text style={styles(colors).emptyText}>{t('wallet.noTransactions')}</Text>
                 ) : (
                     transactions.map((tx) => (
                         <View key={tx.id} style={styles(colors).transactionItem}>
@@ -155,7 +157,37 @@ export default function StudentDashboard() {
                                 />
                             </View>
                             <View style={styles(colors).txDetails}>
-                                <Text style={styles(colors).txDescription}>{tx.description}</Text>
+                                <Text style={styles(colors).txDescription}>
+                                    {(() => {
+                                        // Smart Localization for Transaction Descriptions
+                                        let desc = tx.description;
+
+                                        // Handle Bulk Purchase: "Purchase: 1 lunch, 2 breakfast"
+                                        if (desc.startsWith('Purchase: ')) {
+                                            desc = desc.replace('Purchase: ', t('wallet.purchasePrefix') + ': ');
+                                            desc = desc.replace(/breakfast/gi, t('meals.breakfast'));
+                                            desc = desc.replace(/lunch/gi, t('meals.lunch'));
+                                            desc = desc.replace(/dinner/gi, t('meals.dinner'));
+                                        }
+                                        // Handle Single Purchase: "Bought lunch ticket"
+                                        else if (desc.startsWith('Bought ')) {
+                                            desc = desc.replace('Bought ', t('wallet.purchasePrefix') + ' ');
+                                            desc = desc.replace(/ticket/gi, ''); // Remove 'ticket' word if desired or keep it
+                                            desc = desc.replace(/breakfast/gi, t('meals.breakfast'));
+                                            desc = desc.replace(/lunch/gi, t('meals.lunch'));
+                                            desc = desc.replace(/dinner/gi, t('meals.dinner'));
+                                        }
+                                        // Handle Top-Ups
+                                        else if (desc.includes('Online Top-Up')) {
+                                            return t('wallet.onlineTopUp');
+                                        }
+                                        else if (desc.includes('Wallet top-up')) {
+                                            return t('wallet.adminTopUp');
+                                        }
+
+                                        return desc;
+                                    })()}
+                                </Text>
                                 <Text style={styles(colors).txDate}>{formatDate(tx.created_at)}</Text>
                             </View>
                             <Text style={[
@@ -178,7 +210,7 @@ export default function StudentDashboard() {
                                         marginLeft: 5,
                                         fontStyle: isExpired ? 'italic' : 'normal'
                                     }}>
-                                        ({isExpired ? 'Expired' : 'Pending'})
+                                        ({isExpired ? t('wallet.expired') : t('wallet.pending')})
                                     </Text>
                                 );
                             })()}

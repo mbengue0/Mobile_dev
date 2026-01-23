@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
@@ -34,9 +35,9 @@ const getMealColor = (mealType: string) => {
     }
 };
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString: string, locale: string = 'en') => {
     try {
-        return new Date(dateString).toLocaleDateString(undefined, {
+        return new Date(dateString).toLocaleDateString(locale, {
             weekday: 'short',
             month: 'short',
             day: 'numeric'
@@ -50,6 +51,7 @@ const formatDate = (dateString: string) => {
 
 // 1. Summary Card (The Stack) - Boarding Pass Style
 const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, onPress: () => void }) => {
+    const { t } = useTranslation();
     const accentColor = getMealColor(stack.type);
 
     return (
@@ -61,7 +63,7 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
             <View style={styles(colors).cardContainer}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
-                    <Text style={styles(colors).headerTitle}>{stack.type.toUpperCase()}</Text>
+                    <Text style={styles(colors).headerTitle}>{t(`meals.${stack.type}`).toUpperCase()}</Text>
                     <Ionicons name="layers" size={24} color="rgba(255,255,255,0.9)" />
                 </View>
 
@@ -69,7 +71,7 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
                 <View style={styles(colors).cardBody}>
                     <View style={styles(colors).countContainer}>
                         <Text style={[styles(colors).countText, { color: accentColor }]}>x{stack.count}</Text>
-                        <Text style={styles(colors).countLabel}>Available</Text>
+                        <Text style={styles(colors).countLabel}>{t('tickets.available')}</Text>
                     </View>
 
                     {/* Fake Perforation Line */}
@@ -80,7 +82,7 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
                     </View>
 
                     <View style={styles(colors).cardFooter}>
-                        <Text style={styles(colors).tapText}>Tap to Scan</Text>
+                        <Text style={styles(colors).tapText}>{t('tickets.tapToScan')}</Text>
                         <Ionicons name="arrow-forward" size={20} color={colors.textSecondary} />
                     </View>
                 </View>
@@ -91,6 +93,7 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
 
 // 2. The Detailed Ticket (Inside Modal) - Boarding Pass Style
 const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Ticket; colors: any, index: number, total: number }) => {
+    const { t, i18n } = useTranslation();
     const accentColor = getMealColor(item.meal_type);
 
     return (
@@ -98,8 +101,8 @@ const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Tick
             <View style={styles(colors).cardContainer}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
-                    <Text style={styles(colors).headerTitle}>BOARDING PASS</Text>
-                    <Text style={styles(colors).headerCounter}>{index + 1} of {total}</Text>
+                    <Text style={styles(colors).headerTitle}>{t('tickets.boardingPass')}</Text>
+                    <Text style={styles(colors).headerCounter}>{index + 1} {t('tickets.of')} {total}</Text>
                 </View>
 
                 {/* 2. Body */}
@@ -107,12 +110,12 @@ const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Tick
                     {/* Info Row */}
                     <View style={styles(colors).ticketInfoRow}>
                         <View>
-                            <Text style={styles(colors).infoLabel}>MEAL</Text>
-                            <Text style={styles(colors).infoValue}>{item.meal_type.toUpperCase()}</Text>
+                            <Text style={styles(colors).infoLabel}>{t('tickets.meal')}</Text>
+                            <Text style={styles(colors).infoValue}>{t(`meals.${item.meal_type}`).toUpperCase()}</Text>
                         </View>
                         <View style={{ alignItems: 'flex-end' }}>
-                            <Text style={styles(colors).infoLabel}>DATE</Text>
-                            <Text style={styles(colors).infoValue}>{formatDate(item.meal_date)}</Text>
+                            <Text style={styles(colors).infoLabel}>{t('tickets.date')}</Text>
+                            <Text style={styles(colors).infoValue}>{formatDate(item.meal_date, i18n.language)}</Text>
                         </View>
                     </View>
 
@@ -124,7 +127,7 @@ const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Tick
 
                     {/* Footer Price */}
                     <View style={styles(colors).ticketPriceContainer}>
-                        <Text style={styles(colors).priceLabel}>PRICE</Text>
+                        <Text style={styles(colors).priceLabel}>{t('tickets.price')}</Text>
                         <Text style={[styles(colors).priceValue, { color: accentColor }]}>{item.price} XAF</Text>
                     </View>
                 </View>
@@ -133,35 +136,41 @@ const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Tick
     );
 });
 
-const HistoryTicketRow = React.memo(({ item, colors }: { item: Ticket; colors: any }) => (
-    <View style={styles(colors).historyCard}>
-        <View style={styles(colors).historyIcon}>
-            <Ionicons
-                name={item.status === 'used' ? "checkmark-circle" : "alert-circle"}
-                size={24}
-                color={item.status === 'used' ? colors.text : colors.danger}
-            />
+const HistoryTicketRow = React.memo(({ item, colors }: { item: Ticket; colors: any }) => {
+    const { t, i18n } = useTranslation();
+
+    return (
+        <View style={styles(colors).historyCard}>
+            <View style={styles(colors).historyIcon}>
+                <Ionicons
+                    name={item.status === 'used' ? "checkmark-circle" : "alert-circle"}
+                    size={24}
+                    color={item.status === 'used' ? colors.text : colors.danger}
+                />
+            </View>
+            <View style={{ flex: 1 }}>
+                <Text style={styles(colors).historyTitle}>
+                    {t(`meals.${item.meal_type}`)}
+                </Text>
+                <Text style={styles(colors).historyDate}>
+                    {item.status === 'used' && item.used_at
+                        ? `${t('tickets.used')}: ${new Date(item.used_at).toLocaleDateString(i18n.language)}`
+                        : `${t('tickets.expired')}: ${new Date(item.meal_date).toLocaleDateString(i18n.language)}`
+                    }
+                </Text>
+            </View>
+            <View style={styles(colors).badge}>
+                <Text style={styles(colors).badgeText}>{item.status.toUpperCase()}</Text>
+            </View>
         </View>
-        <View style={{ flex: 1 }}>
-            <Text style={styles(colors).historyTitle}>
-                {item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1)}
-            </Text>
-            <Text style={styles(colors).historyDate}>
-                {item.status === 'used' && item.used_at
-                    ? `Used: ${new Date(item.used_at).toLocaleDateString()}`
-                    : `Expired: ${new Date(item.meal_date).toLocaleDateString()}`
-                }
-            </Text>
-        </View>
-        <View style={styles(colors).badge}>
-            <Text style={styles(colors).badgeText}>{item.status.toUpperCase()}</Text>
-        </View>
-    </View>
-));
+    );
+});
 
 // --- Main Screen ---
 
+
 export default function TicketsScreen() {
+    const { t } = useTranslation();
     const { colors } = useTheme();
     const insets = useSafeAreaInsets();
     const { data, isLoading, refetch, isRefetching } = useTickets();
@@ -231,7 +240,7 @@ export default function TicketsScreen() {
                         onPress={() => setViewMode('active')}
                     >
                         <Text style={[styles(colors).segmentText, viewMode === 'active' && styles(colors).segmentTextActive]}>
-                            Active
+                            {t('tickets.active')}
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -239,7 +248,7 @@ export default function TicketsScreen() {
                         onPress={() => setViewMode('history')}
                     >
                         <Text style={[styles(colors).segmentText, viewMode === 'history' && styles(colors).segmentTextActive]}>
-                            History
+                            {t('tickets.history')}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -249,7 +258,7 @@ export default function TicketsScreen() {
             {viewMode === 'active' ? (
                 <View style={styles(colors).carouselContainer}>
                     {isLoading ? (
-                        <Text style={styles(colors).loadingText}>Loading...</Text>
+                        <Text style={styles(colors).loadingText}>{t('common.loading')}</Text>
                     ) : stacks.length > 0 ? (
                         <FlatList
                             data={stacks}
@@ -275,8 +284,8 @@ export default function TicketsScreen() {
                     ) : (
                         <View style={styles(colors).emptyState}>
                             <Ionicons name="wallet-outline" size={60} color={colors.textSecondary} />
-                            <Text style={styles(colors).emptyText}>Empty Wallet</Text>
-                            <Text style={styles(colors).emptySubtext}>Purchased tickets appear here</Text>
+                            <Text style={styles(colors).emptyText}>{t('tickets.emptyWallet')}</Text>
+                            <Text style={styles(colors).emptySubtext}>{t('tickets.emptyWalletMsg')}</Text>
                         </View>
                     )}
                     {/* Pagination Dots */}
@@ -299,7 +308,7 @@ export default function TicketsScreen() {
                     }
                     ListEmptyComponent={
                         <View style={styles(colors).emptyState}>
-                            <Text style={styles(colors).emptyText}>No history yet</Text>
+                            <Text style={styles(colors).emptyText}>{t('tickets.noHistory')}</Text>
                         </View>
                     }
                 />
@@ -341,7 +350,7 @@ export default function TicketsScreen() {
                             decelerationRate="fast"
                         />
                     </View>
-                    <Text style={styles(colors).modalHint}>Show this code to the scanner</Text>
+                    <Text style={styles(colors).modalHint}>{t('tickets.scannerHint')}</Text>
                 </View>
             </Modal>
         </View>

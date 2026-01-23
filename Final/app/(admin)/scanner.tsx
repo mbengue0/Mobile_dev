@@ -16,7 +16,7 @@ import { useSystemSettings } from '../../hooks/useSystemSettings';
 import { useTranslation } from 'react-i18next';
 
 export default function ScannerScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { colors } = useTheme();
     const [permission, requestPermission] = useCameraPermissions();
@@ -38,12 +38,12 @@ export default function ScannerScreen() {
     const styles = getStyles(colors);
 
     const formatTimeWindow = (start?: number, end?: number) => {
-        if (start === undefined || end === undefined) return "Loading...";
+        if (start === undefined || end === undefined) return t('common.loading');
 
         const formatHour = (h: number) => {
-            const period = h >= 12 ? 'PM' : 'AM';
-            const hour12 = h % 12 || 12;
-            return `${hour12}:00 ${period}`;
+            const date = new Date();
+            date.setHours(h, 0, 0, 0);
+            return date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
         };
 
         return `${formatHour(start)} - ${formatHour(end)}`;
@@ -163,7 +163,7 @@ export default function ScannerScreen() {
             </CameraView>
 
             <View style={styles.infoPanel}>
-                <Text style={styles.infoPanelTitle}>Meal Time Windows</Text>
+                <Text style={styles.infoPanelTitle}>{t('admin.scanner.timeWindows')}</Text>
                 {settingsLoading ? (
                     <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
@@ -171,19 +171,19 @@ export default function ScannerScreen() {
                         <View style={styles.timeSlot}>
                             <Ionicons name="sunny" size={20} color={colors.primary} />
                             <Text style={styles.timeText}>
-                                Breakfast: {formatTimeWindow(settings?.mealTimes.breakfast.start, settings?.mealTimes.breakfast.end)}
+                                {t('meals.breakfast')}: {formatTimeWindow(settings?.mealTimes.breakfast.start, settings?.mealTimes.breakfast.end)}
                             </Text>
                         </View>
                         <View style={styles.timeSlot}>
                             <Ionicons name="restaurant" size={20} color={colors.primary} />
                             <Text style={styles.timeText}>
-                                Lunch: {formatTimeWindow(settings?.mealTimes.lunch.start, settings?.mealTimes.lunch.end)}
+                                {t('meals.lunch')}: {formatTimeWindow(settings?.mealTimes.lunch.start, settings?.mealTimes.lunch.end)}
                             </Text>
                         </View>
                         <View style={styles.timeSlot}>
                             <Ionicons name="moon" size={20} color={colors.primary} />
                             <Text style={styles.timeText}>
-                                Dinner: {formatTimeWindow(settings?.mealTimes.dinner.start, settings?.mealTimes.dinner.end)}
+                                {t('meals.dinner')}: {formatTimeWindow(settings?.mealTimes.dinner.start, settings?.mealTimes.dinner.end)}
                             </Text>
                         </View>
                     </>

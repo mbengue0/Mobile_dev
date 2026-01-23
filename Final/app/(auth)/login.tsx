@@ -55,8 +55,8 @@ export default function LoginScreen() {
                         style={styles.logo}
                         resizeMode="contain"
                     />
-                    <Text style={styles.title}>{t('common.welcome')} to Kanteen</Text>
-                    <Text style={styles.subtitle}>Smart Campus Dining</Text>
+                    <Text style={styles.title}>{t('auth.welcomeTitle')}</Text>
+                    <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
                 </View>
 
                 {/* Form Section */}

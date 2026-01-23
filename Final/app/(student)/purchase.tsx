@@ -9,6 +9,7 @@ import {
     ActivityIndicator,
     Image,
     RefreshControl,
+    Modal,
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
@@ -30,11 +31,12 @@ interface CartState {
 import { useTranslation } from 'react-i18next';
 
 export default function PurchaseScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user, profile, refreshProfile } = useAuth();
     const [cart, setCart] = useState<CartState>({ breakfast: 0, lunch: 0, dinner: 0 });
     const [selectedMeal, setSelectedMeal] = useState<MealType>('lunch');
     const [imageError, setImageError] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
     const { sendNotification } = useNotifications();
@@ -208,9 +210,9 @@ export default function PurchaseScreen() {
         const { start, end } = systemSettings.mealTimes[mealType];
 
         const formatHour = (h: number) => {
-            const period = h >= 12 ? 'PM' : 'AM';
-            const hour12 = h % 12 || 12;
-            return `${hour12} ${period}`;
+            const date = new Date();
+            date.setHours(h, 0, 0, 0);
+            return date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
         };
 
         return `${formatHour(start)} - ${formatHour(end)}`;
@@ -248,15 +250,41 @@ export default function PurchaseScreen() {
                                 <Text style={styles(colors).errorText}>{t('common.error')}</Text>
                             </View>
                         ) : (
-                            <Image
-                                source={{ uri: menuImage.image_url }}
-                                style={styles(colors).menuImage}
-                                resizeMode="cover"
-                                onError={() => setImageError(true)}
-                            />
+                            <TouchableOpacity onPress={() => setShowImageModal(true)} activeOpacity={0.9}>
+                                <Image
+                                    source={{ uri: menuImage.image_url }}
+                                    style={styles(colors).menuImage}
+                                    resizeMode="cover"
+                                    onError={() => setImageError(true)}
+                                />
+                                <View style={styles(colors).expandIcon}>
+                                    <Ionicons name="expand-outline" size={20} color="#fff" />
+                                </View>
+                            </TouchableOpacity>
                         )}
                     </View>
                 )}
+
+                <Modal
+                    visible={showImageModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowImageModal(false)}
+                >
+                    <View style={styles(colors).modalOverlay}>
+                        <TouchableOpacity
+                            style={styles(colors).closeButton}
+                            onPress={() => setShowImageModal(false)}
+                        >
+                            <Ionicons name="close-circle" size={40} color="#fff" />
+                        </TouchableOpacity>
+                        <Image
+                            source={{ uri: menuImage?.image_url }}
+                            style={styles(colors).fullScreenImage}
+                            resizeMode="contain"
+                        />
+                    </View>
+                </Modal>
 
                 <View style={styles(colors).section}>
                     <Text style={styles(colors).sectionTitle}>{t('purchase.selectMeals')}</Text>
@@ -572,5 +600,29 @@ const styles = (colors: any) => StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    expandIcon: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 20,
+        padding: 6,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        zIndex: 10,
+    },
+    fullScreenImage: {
+        width: '100%',
+        height: '80%',
     },
 });

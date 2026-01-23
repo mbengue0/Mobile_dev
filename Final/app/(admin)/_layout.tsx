@@ -1,7 +1,10 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
+
 export default function AdminLayout() {
+    const { t } = useTranslation();
     return (
         <Tabs
             screenOptions={{
@@ -12,7 +15,7 @@ export default function AdminLayout() {
             <Tabs.Screen
                 name="scanner"
                 options={{
-                    title: 'Scanner',
+                    title: t('navigation.scanner'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="qr-code-outline" size={size} color={color} />
                     ),
@@ -21,7 +24,7 @@ export default function AdminLayout() {
             <Tabs.Screen
                 name="cashier"
                 options={{
-                    title: 'Cashier',
+                    title: t('navigation.cashier'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="cash-outline" size={size} color={color} />
                     ),
@@ -30,7 +33,7 @@ export default function AdminLayout() {
             <Tabs.Screen
                 name="menu"
                 options={{
-                    title: 'Menu',
+                    title: t('navigation.menu'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="restaurant-outline" size={size} color={color} />
                     ),
@@ -39,7 +42,7 @@ export default function AdminLayout() {
             <Tabs.Screen
                 name="settings"
                 options={{
-                    title: 'Settings',
+                    title: t('navigation.settings'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="settings-outline" size={size} color={color} />
                     ),

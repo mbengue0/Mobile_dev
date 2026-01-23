@@ -1,7 +1,10 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useTranslation } from 'react-i18next';
+
 export default function StudentLayout() {
+    const { t } = useTranslation();
     return (
         <Tabs
             screenOptions={{
@@ -12,7 +15,7 @@ export default function StudentLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Home',
+                    title: t('navigation.home'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="home" size={size} color={color} />
                     ),
@@ -21,7 +24,7 @@ export default function StudentLayout() {
             <Tabs.Screen
                 name="tickets"
                 options={{
-                    title: 'My Tickets',
+                    title: t('navigation.tickets'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="ticket" size={size} color={color} />
                     ),
@@ -30,7 +33,7 @@ export default function StudentLayout() {
             <Tabs.Screen
                 name="purchase"
                 options={{
-                    title: 'Buy Tickets',
+                    title: t('navigation.buyTickets'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="cart" size={size} color={color} />
                     ),
@@ -39,7 +42,7 @@ export default function StudentLayout() {
             <Tabs.Screen
                 name="wallet"
                 options={{
-                    title: 'Wallet',
+                    title: t('navigation.wallet'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="card" size={size} color={color} />
                     ),
@@ -48,7 +51,7 @@ export default function StudentLayout() {
             <Tabs.Screen
                 name="profile"
                 options={{
-                    title: 'Profile',
+                    title: t('navigation.profile'),
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="person" size={size} color={color} />
                     ),

@@ -20,7 +20,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles(colors).backButton}>
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles(colors).title}>My Profile</Text>
+                <Text style={styles(colors).title}>{t('settings.myProfile')}</Text>
             </View>
 
             <View style={styles(colors).content}>

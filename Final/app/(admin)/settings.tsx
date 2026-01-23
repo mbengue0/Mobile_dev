@@ -31,12 +31,12 @@ export default function SettingsScreen() {
 
     const handleLogout = () => {
         Alert.alert(
-            'Confirm Logout',
-            'Are you sure you want to logout?',
+            t('settings.confirmLogout'),
+            t('settings.logoutMsg'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Logout',
+                    text: t('settings.logout'),
                     style: 'destructive',
                     onPress: async () => {
                         await signOut();
@@ -73,14 +73,14 @@ export default function SettingsScreen() {
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Account</Text>
+                <Text style={styles.sectionTitle}>{t('settings.account')}</Text>
 
                 <TouchableOpacity
                     style={styles.menuItem}
                     onPress={() => setShowProfileModal(true)}
                 >
                     <Ionicons name="person-outline" size={24} color={colors.textSecondary} />
-                    <Text style={styles.menuText}>Profile Information</Text>
+                    <Text style={styles.menuText}>{t('settings.profileInfo')}</Text>
                     <Ionicons name="chevron-forward" size={24} color={colors.border} />
                 </TouchableOpacity>
 
@@ -90,18 +90,18 @@ export default function SettingsScreen() {
                         onPress={() => router.push('/(super_admin)/users')}
                     >
                         <Ionicons name="shield-checkmark-outline" size={24} color={colors.textSecondary} />
-                        <Text style={styles.menuText}>Super Admin Dashboard</Text>
+                        <Text style={styles.menuText}>{t('settings.superAdmin')}</Text>
                         <Ionicons name="chevron-forward" size={24} color={colors.border} />
                     </TouchableOpacity>
                 )}
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Preferences</Text>
+                <Text style={styles.sectionTitle}>{t('settings.preferences')}</Text>
 
                 <View style={styles.menuItem}>
                     <Ionicons name="notifications-outline" size={24} color={colors.textSecondary} />
-                    <Text style={styles.menuText}>Notifications</Text>
+                    <Text style={styles.menuText}>{t('settings.notifications')}</Text>
                     <Switch
                         value={notificationsEnabled}
                         onValueChange={handleNotificationToggle}
@@ -135,7 +135,7 @@ export default function SettingsScreen() {
 
                 <View style={styles.menuItem}>
                     <Ionicons name="moon-outline" size={24} color={colors.textSecondary} />
-                    <Text style={styles.menuText}>Dark Mode</Text>
+                    <Text style={styles.menuText}>{t('settings.darkMode')}</Text>
                     <Switch
                         value={isDarkMode}
                         onValueChange={toggleTheme}
@@ -150,7 +150,7 @@ export default function SettingsScreen() {
                 onPress={handleLogout}
             >
                 <Ionicons name="log-out-outline" size={24} color="#fff" />
-                <Text style={styles.logoutText}>Logout</Text>
+                <Text style={styles.logoutText}>{t('settings.logout')}</Text>
             </TouchableOpacity>
 
             <Text style={styles.version}>Kanteen v1.0.2</Text>
@@ -165,17 +165,17 @@ export default function SettingsScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Profile Information</Text>
+                            <Text style={styles.modalTitle}>{t('settings.profileInfo')}</Text>
                             <TouchableOpacity onPress={() => setShowProfileModal(false)}>
                                 <Ionicons name="close" size={28} color={colors.text} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.profileInfo}>
-                            <InfoRow label="Full Name" value={profile?.full_name || 'N/A'} colors={colors} />
-                            <InfoRow label="Email" value={user?.email} colors={colors} />
+                            <InfoRow label={t('auth.fullName')} value={profile?.full_name || 'N/A'} colors={colors} />
+                            <InfoRow label={t('auth.email')} value={user?.email} colors={colors} />
                             <InfoRow
-                                label="Role"
+                                label={t('settings.role')}
                                 value={profile?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                                 colors={colors}
                             />

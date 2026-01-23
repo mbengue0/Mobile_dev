@@ -1,6 +1,9 @@
 import { Stack } from 'expo-router';
 
+import { useTranslation } from 'react-i18next';
+
 export default function SuperAdminLayout() {
+    const { t } = useTranslation();
     return (
         <Stack
             screenOptions={{
@@ -16,13 +19,13 @@ export default function SuperAdminLayout() {
             <Stack.Screen
                 name="users"
                 options={{
-                    title: 'User Management',
+                    title: t('navigation.users'),
                 }}
             />
             <Stack.Screen
                 name="system-settings"
                 options={{
-                    title: 'System Settings',
+                    title: t('navigation.system'),
                 }}
             />
         </Stack>

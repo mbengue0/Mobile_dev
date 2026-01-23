@@ -27,7 +27,7 @@ interface SearchResult {
 }
 
 export default function CashierScreen() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { user } = useAuth();
     const { colors } = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
@@ -233,7 +233,7 @@ export default function CashierScreen() {
                                     onPress={() => setAmount(String(quickAmount))}
                                 >
                                     <Text style={styles.quickAmountText}>
-                                        {quickAmount.toLocaleString()}
+                                        {quickAmount.toLocaleString(i18n.language)}
                                     </Text>
                                 </TouchableOpacity>
                             ))}

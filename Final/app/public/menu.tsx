@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, Linking, Platform, Modal } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ type MenuQueryResult = DailyMenuData | MealsMenuData | null;
 
 export default function PublicMenuScreen() {
     const todayParams = new Date().toISOString().split('T')[0];
+    const [fullScreenImage, setFullScreenImage] = React.useState<string | null>(null);
 
     const { data: menuData, isLoading, error } = useQuery<MenuQueryResult>({
         queryKey: ['public_menu', todayParams],
@@ -91,11 +92,16 @@ export default function PublicMenuScreen() {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {menuData.type === 'daily' ? (
                     <View style={styles.dailyPosterContainer}>
-                        <Image
-                            source={{ uri: `${menuData.data.image_url}?t=${new Date().getTime()}` }}
-                            style={styles.dailyPoster}
-                            resizeMode="contain"
-                        />
+                        <TouchableOpacity onPress={() => setFullScreenImage(menuData.data.image_url)} activeOpacity={0.9}>
+                            <Image
+                                source={{ uri: `${menuData.data.image_url}?t=${new Date().getTime()}` }}
+                                style={styles.dailyPoster}
+                                resizeMode="contain"
+                            />
+                            <View style={styles.expandIcon}>
+                                <Ionicons name="expand-outline" size={24} color="#fff" />
+                            </View>
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     <View style={styles.mealsList}>
@@ -105,16 +111,44 @@ export default function PublicMenuScreen() {
                                 <View style={styles.mealHeader}>
                                     <Text style={styles.mealType}>{meal.meal_type.toUpperCase()}</Text>
                                 </View>
-                                <Image
-                                    source={{ uri: `${meal.image_url}?t=${new Date().getTime()}` }}
-                                    style={styles.mealImage}
-                                    resizeMode="cover"
-                                />
+                                <TouchableOpacity onPress={() => setFullScreenImage(meal.image_url)} activeOpacity={0.9}>
+                                    <Image
+                                        source={{ uri: `${meal.image_url}?t=${new Date().getTime()}` }}
+                                        style={styles.mealImage}
+                                        resizeMode="cover"
+                                    />
+                                    <View style={styles.expandIcon}>
+                                        <Ionicons name="expand-outline" size={20} color="#fff" />
+                                    </View>
+                                </TouchableOpacity>
                             </View>
                         ))}
                     </View>
                 )}
             </ScrollView>
+
+            <Modal
+                visible={!!fullScreenImage}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setFullScreenImage(null)}
+            >
+                <View style={styles.modalOverlay}>
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setFullScreenImage(null)}
+                    >
+                        <Ionicons name="close-circle" size={40} color="#fff" />
+                    </TouchableOpacity>
+                    {fullScreenImage && (
+                        <Image
+                            source={{ uri: fullScreenImage }}
+                            style={styles.fullScreenImage}
+                            resizeMode="contain"
+                        />
+                    )}
+                </View>
+            </Modal>
 
             {/* Sticky Footer CTA */}
             <View style={styles.footer}>
@@ -263,5 +297,29 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    expandIcon: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 20,
+        padding: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 10,
+    },
+    fullScreenImage: {
+        width: '100%',
+        height: '90%',
     },
 });
