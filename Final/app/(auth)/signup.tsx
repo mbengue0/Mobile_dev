@@ -15,7 +15,10 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useRouter, Link } from 'expo-router';
 
+import { useTranslation } from 'react-i18next';
+
 export default function SignupScreen() {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
@@ -96,7 +99,7 @@ export default function SignupScreen() {
                         style={styles.logo}
                         resizeMode="contain"
                     />
-                    <Text style={styles.title}>Create your Account</Text>
+                    <Text style={styles.title}>{t('auth.signup')}</Text>
                     <Text style={styles.subtitle}>Smart Campus Dining</Text>
                 </View>
 
@@ -104,7 +107,7 @@ export default function SignupScreen() {
                 <View style={styles.form}>
                     <TextInput
                         style={styles.input}
-                        placeholder="Full Name"
+                        placeholder={t('auth.fullName')}
                         placeholderTextColor="#999"
                         value={fullName}
                         onChangeText={setFullName}
@@ -112,7 +115,7 @@ export default function SignupScreen() {
 
                     <TextInput
                         style={styles.input}
-                        placeholder="Email Address"
+                        placeholder={t('auth.email')}
                         placeholderTextColor="#999"
                         value={email}
                         onChangeText={setEmail}
@@ -123,7 +126,7 @@ export default function SignupScreen() {
                     <View>
                         <TextInput
                             style={[styles.input, passwordError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : {}]}
-                            placeholder="Password (min 6 characters and a number)"
+                            placeholder={t('auth.password')}
                             placeholderTextColor="#999"
                             value={password}
                             onChangeText={validatePassword}
@@ -142,14 +145,14 @@ export default function SignupScreen() {
                         {loading ? (
                             <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.buttonText}>Create Account</Text>
+                            <Text style={styles.buttonText}>{t('auth.signup')}</Text>
                         )}
                     </TouchableOpacity>
 
                     <Link href="/(auth)/login" asChild>
                         <TouchableOpacity style={styles.linkButton}>
                             <Text style={styles.linkText}>
-                                Already have an account? <Text style={styles.linkHighlight}>Log In</Text>
+                                {t('auth.hasAccount')}
                             </Text>
                         </TouchableOpacity>
                     </Link>

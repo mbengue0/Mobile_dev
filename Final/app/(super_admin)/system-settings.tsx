@@ -14,6 +14,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 interface MealTimes {
     breakfast: { start: number; end: number };
@@ -27,7 +28,13 @@ interface MealPrices {
     dinner: number;
 }
 
+import { setLanguage } from '../../lib/i18n';
+
 export default function SystemSettingsScreen() {
+    const { t, i18n } = useTranslation();
+    // Using hardcoded colors for consistency with original file structure
+    // Line 17: import { useTranslation } from 'react-i18next';
+    // Line 16: import { Ionicons } from '@expo/vector-icons';
     const queryClient = useQueryClient();
 
     // Fetch current settings
@@ -103,10 +110,10 @@ export default function SystemSettingsScreen() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['system_settings'] });
-            Alert.alert('Success', 'Settings updated successfully!');
+            Alert.alert(t('common.success'), t('admin.system.success'));
         },
         onError: (error: any) => {
-            Alert.alert('Error', error.message);
+            Alert.alert(t('common.error'), error.message);
         },
     });
 
@@ -135,7 +142,7 @@ export default function SystemSettingsScreen() {
     const handleSave = () => {
         // Validation
         if (!mealTimes || !mealPrices) {
-            Alert.alert('Error', 'Please fill in all fields');
+            Alert.alert(t('common.error'), t('admin.system.fillAll'));
             return;
         }
 
@@ -144,15 +151,15 @@ export default function SystemSettingsScreen() {
         for (const meal of meals) {
             const { start, end } = mealTimes[meal];
             if (start >= end) {
-                Alert.alert('Error', `${meal} start time must be before end time`);
+                Alert.alert(t('common.error'), t('admin.system.timeError', { meal: t(`meals.${meal}`) }));
                 return;
             }
             if (start < 0 || start > 23 || end < 0 || end > 23) {
-                Alert.alert('Error', 'Hours must be between 0 and 23');
+                Alert.alert(t('common.error'), t('admin.system.hoursError'));
                 return;
             }
             if (mealPrices[meal] <= 0) {
-                Alert.alert('Error', `${meal} price must be greater than 0`);
+                Alert.alert(t('common.error'), t('admin.system.priceError', { meal: t(`meals.${meal}`) }));
                 return;
             }
         }
@@ -162,12 +169,12 @@ export default function SystemSettingsScreen() {
 
     const handleReset = () => {
         Alert.alert(
-            'Reset to Defaults',
-            'Are you sure you want to reset all settings to default values?',
+            t('admin.system.reset'),
+            t('admin.system.resetConfirm'),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Reset',
+                    text: t('admin.system.reset'),
                     style: 'destructive',
                     onPress: () => {
                         setMealTimes({
@@ -190,7 +197,7 @@ export default function SystemSettingsScreen() {
         return (
             <View style={styles.centerContainer}>
                 <ActivityIndicator size="large" color="#007AFF" />
-                <Text style={styles.loadingText}>Loading settings...</Text>
+                <Text style={styles.loadingText}>{t('common.loading')}</Text>
             </View>
         );
     }
@@ -207,13 +214,44 @@ export default function SystemSettingsScreen() {
             >
                 <View style={styles.header}>
                     <Ionicons name="settings" size={32} color="#007AFF" />
-                    <Text style={styles.headerTitle}>System Settings</Text>
-                    <Text style={styles.headerSubtitle}>Configure meal times and prices</Text>
+                    <Text style={styles.headerTitle}>{t('admin.system.title')}</Text>
+                    <Text style={styles.headerSubtitle}>{t('admin.system.subtitle')}</Text>
+                </View>
+
+                {/* Local Preferences Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{t('settings.title')}</Text>
+                    <View style={styles.mealCard}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                <Ionicons name="language" size={24} color="#007AFF" />
+                                <Text style={styles.mealName}>{t('settings.language')}</Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => setLanguage(i18n.language === 'en' ? 'fr' : 'en')}
+                                style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    backgroundColor: '#f9f9f9',
+                                    paddingHorizontal: 12,
+                                    paddingVertical: 8,
+                                    borderRadius: 8,
+                                    borderWidth: 1,
+                                    borderColor: '#ddd'
+                                }}
+                            >
+                                <Text style={{ color: '#333', fontWeight: 'bold', marginRight: 5 }}>
+                                    {i18n.language === 'en' ? 'English' : 'Français'}
+                                </Text>
+                                <Ionicons name="repeat" size={16} color="#666" />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Meal Times Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>⏰ Meal Time Windows (24h format)</Text>
+                    <Text style={styles.sectionTitle}>{t('admin.system.mealTimes')}</Text>
 
                     {(['breakfast', 'lunch', 'dinner'] as const).map((meal) => (
                         <View key={meal} style={styles.mealCard}>
@@ -224,13 +262,13 @@ export default function SystemSettingsScreen() {
                                     color="#007AFF"
                                 />
                                 <Text style={styles.mealName}>
-                                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                                    {t(`meals.${meal}`)}
                                 </Text>
                             </View>
 
                             <View style={styles.timeInputs}>
                                 <View style={styles.timeInput}>
-                                    <Text style={styles.inputLabel}>Start Hour</Text>
+                                    <Text style={styles.inputLabel}>{t('admin.system.start')}</Text>
                                     <TextInput
                                         style={styles.input}
                                         value={mealTimes[meal].start.toString()}
@@ -249,7 +287,7 @@ export default function SystemSettingsScreen() {
                                 <Text style={styles.timeSeparator}>to</Text>
 
                                 <View style={styles.timeInput}>
-                                    <Text style={styles.inputLabel}>End Hour</Text>
+                                    <Text style={styles.inputLabel}>{t('admin.system.end')}</Text>
                                     <TextInput
                                         style={styles.input}
                                         value={mealTimes[meal].end.toString()}
@@ -271,7 +309,7 @@ export default function SystemSettingsScreen() {
 
                 {/* Meal Prices Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>💰 Meal Prices (FCFA)</Text>
+                    <Text style={styles.sectionTitle}>{t('admin.system.mealPrices')}</Text>
 
                     {(['breakfast', 'lunch', 'dinner'] as const).map((meal) => (
                         <View key={meal} style={styles.priceCard}>
@@ -282,7 +320,7 @@ export default function SystemSettingsScreen() {
                                     color="#007AFF"
                                 />
                                 <Text style={styles.priceMealName}>
-                                    {meal.charAt(0).toUpperCase() + meal.slice(1)}
+                                    {t(`meals.${meal}`)}
                                 </Text>
                             </View>
 
@@ -310,7 +348,7 @@ export default function SystemSettingsScreen() {
                         onPress={handleReset}
                     >
                         <Ionicons name="refresh" size={20} color="#FF3B30" />
-                        <Text style={styles.resetButtonText}>Reset to Defaults</Text>
+                        <Text style={styles.resetButtonText}>{t('admin.system.reset')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -323,7 +361,7 @@ export default function SystemSettingsScreen() {
                         ) : (
                             <>
                                 <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                                <Text style={styles.saveButtonText}>Save Changes</Text>
+                                <Text style={styles.saveButtonText}>{t('admin.system.save')}</Text>
                             </>
                         )}
                     </TouchableOpacity>

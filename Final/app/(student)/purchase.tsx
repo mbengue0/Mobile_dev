@@ -27,7 +27,10 @@ interface CartState {
     dinner: number;
 }
 
+import { useTranslation } from 'react-i18next';
+
 export default function PurchaseScreen() {
+    const { t } = useTranslation();
     const { user, profile, refreshProfile } = useAuth();
     const [cart, setCart] = useState<CartState>({ breakfast: 0, lunch: 0, dinner: 0 });
     const [selectedMeal, setSelectedMeal] = useState<MealType>('lunch');
@@ -110,21 +113,21 @@ export default function PurchaseScreen() {
 
             // Send notification
             sendNotification(
-                'Tickets Purchased! 🎫',
-                `Your ${totalItems} ticket${totalItems > 1 ? 's are' : ' is'} ready to use`,
+                t('purchase.successTitle'),
+                t('purchase.successMsg', { count: totalItems }),
                 'ticket_purchase',
                 { cart }
             );
 
             Alert.alert(
-                'Success!',
-                `Successfully purchased ${totalItems} ticket(s)`,
+                t('purchase.successTitle'),
+                t('purchase.successMsg', { count: totalItems }),
                 [
                     {
-                        text: 'View Tickets',
+                        text: t('purchase.viewTickets'),
                         onPress: () => router.push('/(student)/tickets'),
                     },
-                    { text: 'OK' },
+                    { text: t('common.confirm') },
                 ]
             );
 
@@ -132,7 +135,7 @@ export default function PurchaseScreen() {
             setCart({ breakfast: 0, lunch: 0, dinner: 0 });
         },
         onError: (error: any) => {
-            Alert.alert('Purchase Failed', error.message || 'An error occurred');
+            Alert.alert(t('purchase.purchaseFailed'), error.message || t('common.error'));
         },
     });
 
@@ -150,7 +153,7 @@ export default function PurchaseScreen() {
             }));
 
         if (items.length === 0) {
-            Alert.alert('Empty Cart', 'Please add at least one ticket to your cart');
+            Alert.alert(t('purchase.emptyCart'), t('purchase.emptyCartMsg'));
             return;
         }
 
@@ -159,22 +162,22 @@ export default function PurchaseScreen() {
 
         if (!profile || profile.wallet_balance < totalCost) {
             Alert.alert(
-                'Insufficient Funds',
-                `You need ${totalCost} FCFA but only have ${profile?.wallet_balance || 0} FCFA`
+                t('purchase.insufficientFunds'),
+                t('purchase.insufficientFundsMsg', { total: totalCost, balance: profile?.wallet_balance || 0 })
             );
             return;
         }
 
         // Build summary for confirmation
-        const summary = items.map(item => `${item.quantity} ${item.type}`).join(', ');
+        const summary = items.map(item => `${item.quantity} ${t(`meals.${item.type}`)}`).join(', ');
 
         Alert.alert(
-            'Confirm Purchase',
-            `Buy ${summary} for ${totalCost} FCFA?`,
+            t('purchase.confirmPurchase'),
+            t('purchase.purchaseDesc', { summary, total: totalCost }),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Confirm',
+                    text: t('common.confirm'),
                     onPress: () => purchaseMutation.mutate(items),
                 },
             ]
@@ -237,12 +240,12 @@ export default function PurchaseScreen() {
                 {menuImage?.image_url && (
                     <View style={styles(colors).menuPreview}>
                         <Text style={styles(colors).menuTitle}>
-                            {menuImage.isDaily ? "Today's Menu" : "Menu Preview"}
+                            {menuImage.isDaily ? t('meals.dailyOverview') : t('purchase.menuPreview')}
                         </Text>
                         {imageError ? (
                             <View style={[styles(colors).menuImage, styles(colors).errorContainer]}>
                                 <Ionicons name="image-outline" size={48} color={colors.textSecondary} />
-                                <Text style={styles(colors).errorText}>Could not load image</Text>
+                                <Text style={styles(colors).errorText}>{t('common.error')}</Text>
                             </View>
                         ) : (
                             <Image
@@ -256,8 +259,8 @@ export default function PurchaseScreen() {
                 )}
 
                 <View style={styles(colors).section}>
-                    <Text style={styles(colors).sectionTitle}>Select Meals</Text>
-                    <Text style={styles(colors).subtitle}>Add items to your cart</Text>
+                    <Text style={styles(colors).sectionTitle}>{t('purchase.selectMeals')}</Text>
+                    <Text style={styles(colors).subtitle}>{t('purchase.addToCart')}</Text>
 
                     {meals.map((meal) => (
                         <View
@@ -279,14 +282,17 @@ export default function PurchaseScreen() {
                                     color={cart[meal] > 0 ? colors.primary : colors.textSecondary}
                                 />
                                 <View style={styles(colors).mealText}>
-                                    <Text
-                                        style={[
-                                            styles(colors).mealName,
-                                            cart[meal] > 0 && styles(colors).mealNameActive,
-                                        ]}
-                                    >
-                                        {meal.charAt(0).toUpperCase() + meal.slice(1)}
-                                    </Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                        <Text
+                                            style={[
+                                                styles(colors).mealName,
+                                                cart[meal] > 0 && styles(colors).mealNameActive,
+                                            ]}
+                                        >
+                                            {t(`meals.${meal}`)}
+                                        </Text>
+                                        <Ionicons name="eye-outline" size={16} color={colors.textSecondary} />
+                                    </View>
                                     <Text style={styles(colors).mealTime}>{getMealTime(meal)}</Text>
                                     <Text style={styles(colors).mealPrice}>
                                         {systemSettings?.mealPrices?.[meal] || 0} FCFA
@@ -324,7 +330,7 @@ export default function PurchaseScreen() {
                         </View>
                     ))}
 
-                    <Text style={styles(colors).hint}>Maximum 10 tickets per meal type</Text>
+                    <Text style={styles(colors).hint}>{t('purchase.maxLimit')}</Text>
                 </View>
 
                 {/* Spacer for floating footer */}
@@ -336,7 +342,7 @@ export default function PurchaseScreen() {
                 <View style={styles(colors).floatingFooter}>
                     <View style={styles(colors).footerInfo}>
                         <Text style={styles(colors).footerItems}>
-                            {totalItems} Item{totalItems > 1 ? 's' : ''}
+                            {totalItems} {t('purchase.items')}
                         </Text>
                         <Text style={styles(colors).footerTotal}>{totalCost} FCFA</Text>
                     </View>
@@ -353,7 +359,7 @@ export default function PurchaseScreen() {
                         ) : (
                             <>
                                 <Ionicons name="cart" size={20} color="#fff" style={{ marginRight: 8 }} />
-                                <Text style={styles(colors).checkoutButtonText}>Checkout</Text>
+                                <Text style={styles(colors).checkoutButtonText}>{t('purchase.checkout')}</Text>
                             </>
                         )}
                     </TouchableOpacity>

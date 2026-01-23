@@ -15,11 +15,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import NotificationService from '../../services/NotificationService';
 import { useTheme } from '../../providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
+import { setLanguage } from '../../lib/i18n';
 
 export default function SettingsScreen() {
     const { user, profile, signOut } = useAuth();
     const router = useRouter();
     const { colors, isDarkMode, toggleTheme } = useTheme();
+    const { t, i18n } = useTranslation();
 
     const [notificationsEnabled, setNotificationsEnabled] = useState(
         profile?.notifications_enabled ?? true
@@ -105,6 +108,29 @@ export default function SettingsScreen() {
                         trackColor={{ false: '#ccc', true: colors.primary }}
                         thumbColor="#fff"
                     />
+                </View>
+
+                <View style={styles.menuItem}>
+                    <Ionicons name="language-outline" size={24} color={colors.textSecondary} />
+                    <Text style={styles.menuText}>{t('settings.language')}</Text>
+                    <TouchableOpacity
+                        onPress={() => setLanguage(i18n.language === 'en' ? 'fr' : 'en')}
+                        style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: colors.background,
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 8,
+                            borderWidth: 1,
+                            borderColor: colors.border
+                        }}
+                    >
+                        <Text style={{ color: colors.text, fontWeight: '600', marginRight: 4 }}>
+                            {i18n.language === 'en' ? 'EN' : 'FR'}
+                        </Text>
+                        <Ionicons name="repeat" size={16} color={colors.textSecondary} />
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.menuItem}>

@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 
 import NotificationService from '../../services/NotificationService';
+import { useTranslation } from 'react-i18next';
 
 interface SearchResult {
     id: string;
@@ -26,6 +27,7 @@ interface SearchResult {
 }
 
 export default function CashierScreen() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { colors } = useTheme();
     const [searchQuery, setSearchQuery] = useState('');
@@ -91,22 +93,22 @@ export default function CashierScreen() {
         const amountNum = parseInt(amount);
 
         if (isNaN(amountNum) || amountNum <= 0) {
-            Alert.alert('Invalid Amount', 'Please enter a valid amount');
+            Alert.alert(t('wallet.invalidAmount'), t('wallet.enterValidAmount'));
             return;
         }
 
         if (amountNum > 50000) {
-            Alert.alert('Limit Exceeded', 'Maximum top-up is 50,000 FCFA');
+            Alert.alert(t('admin.cashier.limitExceeded'), t('admin.cashier.maxTopUp'));
             return;
         }
 
         Alert.alert(
-            'Confirm Top-Up',
-            `Add ${amountNum} FCFA to ${searchResult.full_name}'s wallet?`,
+            t('admin.cashier.confirmTitle'),
+            t('admin.cashier.confirmMsg', { amount: amountNum, name: searchResult.full_name }),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Confirm',
+                    text: t('common.confirm'),
                     onPress: async () => {
                         setProcessing(true);
 
@@ -121,8 +123,8 @@ export default function CashierScreen() {
 
                             if (data.success) {
                                 Alert.alert(
-                                    'Success',
-                                    `Added ${amountNum} FCFA. New balance: ${data.new_balance} FCFA`
+                                    t('common.success'),
+                                    t('admin.cashier.successMsg', { amount: amountNum, balance: data.new_balance })
                                 );
                                 // Update local result
                                 setSearchResult({
@@ -156,10 +158,10 @@ export default function CashierScreen() {
                                     );
                                 }
                             } else {
-                                Alert.alert('Error', data.error);
+                                Alert.alert(t('common.error'), data.error);
                             }
                         } catch (error: any) {
-                            Alert.alert('Transaction Failed', error.message);
+                            Alert.alert(t('admin.cashier.transactionFailed'), error.message);
                         } finally {
                             setProcessing(false);
                         }
@@ -174,11 +176,11 @@ export default function CashierScreen() {
     return (
         <ScrollView style={styles.container}>
             <View style={styles.searchSection}>
-                <Text style={styles.sectionTitle}>Search User</Text>
+                <Text style={styles.sectionTitle}>{t('admin.cashier.title')}</Text>
                 <View style={styles.searchContainer}>
                     <TextInput
                         style={styles.searchInput}
-                        placeholder="Enter email or student ID"
+                        placeholder={t('admin.cashier.placeholder')}
                         placeholderTextColor={colors.textSecondary}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
@@ -206,17 +208,17 @@ export default function CashierScreen() {
                     </View>
 
                     <View style={styles.balanceContainer}>
-                        <Text style={styles.balanceLabel}>Current Balance</Text>
+                        <Text style={styles.balanceLabel}>{t('admin.cashier.currentBalance')}</Text>
                         <Text style={styles.balanceValue}>
                             {searchResult.wallet_balance} FCFA
                         </Text>
                     </View>
 
                     <View style={styles.addFundsSection}>
-                        <Text style={styles.sectionTitle}>Add Funds</Text>
+                        <Text style={styles.sectionTitle}>{t('wallet.topUp')}</Text>
                         <TextInput
                             style={styles.amountInput}
-                            placeholder="Enter amount (FCFA)"
+                            placeholder={t('admin.cashier.amountPlaceholder')}
                             placeholderTextColor={colors.textSecondary}
                             value={amount}
                             onChangeText={setAmount}
@@ -248,7 +250,7 @@ export default function CashierScreen() {
                             {processing ? (
                                 <ActivityIndicator color="#fff" />
                             ) : (
-                                <Text style={styles.addButtonText}>Add Funds</Text>
+                                <Text style={styles.addButtonText}>{t('admin.cashier.confirm')}</Text>
                             )}
                         </TouchableOpacity>
                     </View>
@@ -258,7 +260,7 @@ export default function CashierScreen() {
             {!searchResult && !searching && (
                 <View style={styles.emptyState}>
                     <Ionicons name="search-outline" size={64} color={colors.textSecondary} />
-                    <Text style={styles.emptyText}>Search for a user to begin</Text>
+                    <Text style={styles.emptyText}>{t('admin.cashier.subtitle')}</Text>
                 </View>
             )}
         </ScrollView>

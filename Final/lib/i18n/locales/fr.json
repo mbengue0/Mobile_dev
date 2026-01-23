@@ -30,7 +30,14 @@
         "cashier": "Visiter la caisse",
         "noTransactions": "Aucune transaction",
         "pending": "En attente",
-        "expired": "Expiré"
+        "expired": "Expiré",
+        "invalidAmount": "Montant invalide",
+        "enterValidAmount": "Veuillez entrer un montant valide (Min 500 FCFA)",
+        "paymentFailed": "Échec du paiement",
+        "securePayment": "Paiement sécurisé via NabooPay",
+        "minDeposit": "Dépôt minimum : 500 FCFA. Transactions sécurisées et instantanées.",
+        "cashierInfo": "Visitez une caisse autorisée pour recharger manuellement.",
+        "amountPlaceholder": "Montant (ex: 5000)"
     },
     "meals": {
         "breakfast": "Petit-déjeuner",
@@ -43,19 +50,98 @@
         "addToCart": "Ajoutez des articles au panier",
         "checkout": "Payer",
         "emptyCart": "Panier vide",
+        "emptyCartMsg": "Veuillez ajouter au moins un ticket",
         "confirmPurchase": "Confirmer l'achat",
-        "purchaseDesc": "Acheter {{quantity}} articles pour {{total}} FCFA ?",
+        "purchaseDesc": "Acheter {{summary}} pour {{total}} FCFA ?",
         "successTitle": "Tickets achetés ! 🎫",
-        "successMsg": "Vos tickets sont prêts à l'emploi",
+        "successMsg": "Achat réussi de {{count}} ticket(s)",
         "maxLimit": "Maximum 10 tickets par type de repas",
         "menuPreview": "Aperçu du menu",
-        "noMenuImage": "Aucune image disponible"
+        "noMenuImage": "Aucune image disponible",
+        "insufficientFunds": "Fonds insuffisants",
+        "insufficientFundsMsg": "Il vous faut {{total}} FCFA mais vous n'avez que {{balance}} FCFA",
+        "items": "Article(s)",
+        "viewTickets": "Voir mes tickets",
+        "purchaseFailed": "Échec de l'achat"
+    },
+    "admin": {
+        "scanner": {
+            "title": "Scanner un QR Code",
+            "permission": "Demande de permission caméra...",
+            "noAccess": "Pas d'accès à la caméra",
+            "scanning": "Recherche...",
+            "success": "Ticket Validé",
+            "invalid": "Ticket Invalide",
+            "used": "Ticket Déjà Utilisé",
+            "processing": "Traitement...",
+            "validTicket": "✓ Ticket {{type}} valide",
+            "validationFailed": "Validation échouée",
+            "timeWindows": "Horaires des Repas"
+        },
+        "cashier": {
+            "title": "Recharge Caisse",
+            "subtitle": "Rechercher par Matricule ou Email",
+            "placeholder": "Entrez matricule ou email...",
+            "search": "Rechercher",
+            "currentBalance": "Solde Actuel",
+            "amountPlaceholder": "Montant à ajouter",
+            "confirm": "Confirmer le rechargement",
+            "success": "Rechargement réussi",
+            "limitExceeded": "Limite Dépassée",
+            "maxTopUp": "Recharge maximum de 50 000 FCFA",
+            "confirmTitle": "Confirmer Recharge",
+            "confirmMsg": "Ajouter {{amount}} FCFA au compte de {{name}} ?",
+            "successMsg": "Ajouté {{amount}} FCFA. Nouveau solde : {{balance}} FCFA",
+            "transactionFailed": "Échec de la transaction"
+        },
+        "menu": {
+            "title": "Mettre à jour le Menu",
+            "dailyPoster": "Affiche Journalière",
+            "byMeal": "Par Repas",
+            "uploadPoster": "Télécharger l'Affiche",
+            "uploadMeal": "Télécharger l'Image",
+            "pickImage": "Choisir depuis la Galerie",
+            "placeholder": "Sélectionner une image",
+            "placeholderDaily": "Télécharger l'affiche du jour",
+            "success": "Menu mis à jour avec succès !"
+        },
+        "system": {
+            "title": "Paramètres Système",
+            "subtitle": "Configurer les horaires et prix",
+            "mealTimes": "⏰ Horaires des repas (24h)",
+            "mealPrices": "💰 Prix des repas (FCFA)",
+            "start": "Début",
+            "end": "Fin",
+            "reset": "Rétablir par défaut",
+            "save": "Enregistrer",
+            "error": "Erreur de chargement",
+            "success": "Paramètres mis à jour",
+            "resetConfirm": "Voulez-vous vraiment rétablir les paramètres par défaut ?",
+            "fillAll": "Veuillez remplir tous les champs",
+            "timeError": "L'heure de début de {{meal}} doit être avant l'heure de fin",
+            "hoursError": "Les heures doivent être entre 0 et 23",
+            "priceError": "Le prix de {{meal}} doit être supérieur à 0"
+        },
+        "users": {
+            "title": "Gestion des Utilisateurs",
+            "all": "Tous",
+            "students": "Étudiants",
+            "staff": "Personnel",
+            "promote": "Promouvoir Admin",
+            "promoteConfirm": "Promouvoir {{name}} comme Admin ?",
+            "noUsers": "Aucun utilisateur trouvé",
+            "promotedSuccess": "Utilisateur promu admin"
+        }
     },
     "settings": {
         "title": "Paramètres",
         "language": "Langue",
         "theme": "Thème",
         "logout": "Déconnexion",
-        "profile": "Profil"
+        "profile": "Profil",
+        "myProfile": "Mon Profil",
+        "role": "Rôle",
+        "studentId": "Matricule",
+        "email": "Email"
     }
 }

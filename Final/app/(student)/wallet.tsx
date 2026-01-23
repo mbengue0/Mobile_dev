@@ -17,11 +17,13 @@ import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../providers/ThemeProvider';
 import { useAuth } from '../../hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 export default function WalletScreen() {
     const { colors } = useTheme();
     const router = useRouter();
     const { profile, refreshProfile } = useAuth();
+    const { t } = useTranslation();
 
     const [amount, setAmount] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -95,25 +97,25 @@ export default function WalletScreen() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color={colors.text} />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Top Up Wallet</Text>
+                    <Text style={styles.title}>{t('wallet.topUp')}</Text>
                 </View>
 
                 {/* Current Balance */}
                 <View style={styles.card}>
-                    <Text style={styles.cardLabel}>Current Balance</Text>
+                    <Text style={styles.cardLabel}>{t('wallet.balance')}</Text>
                     <Text style={styles.balance}>{profile?.wallet_balance.toLocaleString()} FCFA</Text>
                 </View>
 
                 {/* Top Up Form */}
                 <View style={styles.formContainer}>
-                    <Text style={styles.sectionTitle}>Add Funds (Online)</Text>
-                    <Text style={styles.subtitle}>Secure payment via NabooPay</Text>
+                    <Text style={styles.sectionTitle}>{t('wallet.online')}</Text>
+                    <Text style={styles.subtitle}>{t('wallet.securePayment')}</Text>
 
                     <View style={styles.inputContainer}>
                         <Text style={styles.currencySymbol}>FCFA</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Amount (e.g. 5000)"
+                            placeholder={t('wallet.amountPlaceholder')}
                             placeholderTextColor={colors.textSecondary}
                             keyboardType="numeric"
                             value={amount}
@@ -135,13 +137,13 @@ export default function WalletScreen() {
                         ) : (
                             <>
                                 <Ionicons name="card-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                                <Text style={styles.payButtonText}>Pay Securely</Text>
+                                <Text style={styles.payButtonText}>{t('common.confirm')}</Text>
                             </>
                         )}
                     </TouchableOpacity>
 
                     <Text style={styles.disclaimer}>
-                        Minimum deposit: 500 FCFA. Transactions are secured and processed instantly.
+                        {t('wallet.minDeposit')}
                     </Text>
                 </View>
 
@@ -152,9 +154,9 @@ export default function WalletScreen() {
                             <Ionicons name="cash" size={24} color={colors.text} />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text style={[styles.sectionTitle, { fontSize: 16 }]}>Pay with Cash?</Text>
+                            <Text style={[styles.sectionTitle, { fontSize: 16 }]}>{t('wallet.cashier')}</Text>
                             <Text style={[styles.subtitle, { marginBottom: 0 }]}>
-                                Visit an authorized Admin Cashier to top up your wallet manually.
+                                {t('wallet.cashierInfo')}
                             </Text>
                         </View>
                     </View>

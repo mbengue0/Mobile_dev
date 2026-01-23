@@ -14,6 +14,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 interface User {
     id: string;
@@ -25,6 +26,7 @@ interface User {
 }
 
 export default function UsersScreen() {
+    const { t } = useTranslation();
     const { signOut } = useAuth();
     const [filter, setFilter] = useState<'all' | 'student' | 'admin'>('all');
     const queryClient = useQueryClient();
@@ -58,21 +60,21 @@ export default function UsersScreen() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            Alert.alert('Success', 'User promoted to admin');
+            Alert.alert(t('common.success'), t('admin.users.promotedSuccess'));
         },
         onError: (error: any) => {
-            Alert.alert('Error', error.message);
+            Alert.alert(t('common.error'), error.message);
         },
     });
 
     const handlePromote = (user: User) => {
         Alert.alert(
-            'Promote User',
-            `Promote ${user.full_name} to Admin?`,
+            t('admin.users.promote'),
+            t('admin.users.promoteConfirm', { name: user.full_name }),
             [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                    text: 'Promote',
+                    text: t('common.confirm'),
                     style: 'destructive',
                     onPress: () => promoteMutation.mutate(user.id),
                 },
@@ -99,7 +101,7 @@ export default function UsersScreen() {
                     <Text style={styles.userEmail}>{item.email}</Text>
                     <Text style={styles.userDetail}>ID: {item.student_id}</Text>
                     <Text style={styles.userDetail}>
-                        Balance: {item.wallet_balance} FCFA
+                        {t('wallet.balance')}: {item.wallet_balance} FCFA
                     </Text>
                 </View>
                 <View
@@ -125,7 +127,7 @@ export default function UsersScreen() {
                     ) : (
                         <>
                             <Ionicons name="arrow-up-circle" size={20} color="#fff" />
-                            <Text style={styles.promoteButtonText}>Promote to Staff</Text>
+                            <Text style={styles.promoteButtonText}>{t('admin.users.promote')}</Text>
                         </>
                     )}
                 </TouchableOpacity>
@@ -149,7 +151,7 @@ export default function UsersScreen() {
                     onPress={() => setFilter('all')}
                 >
                     <Text style={[styles.filterText, filter === 'all' && styles.filterTextActive]}>
-                        All
+                        {t('admin.users.all')}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -157,7 +159,7 @@ export default function UsersScreen() {
                     onPress={() => setFilter('student')}
                 >
                     <Text style={[styles.filterText, filter === 'student' && styles.filterTextActive]}>
-                        Students
+                        {t('admin.users.students')}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -165,7 +167,7 @@ export default function UsersScreen() {
                     onPress={() => setFilter('admin')}
                 >
                     <Text style={[styles.filterText, filter === 'admin' && styles.filterTextActive]}>
-                        Staff
+                        {t('admin.users.staff')}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -181,7 +183,7 @@ export default function UsersScreen() {
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
                         <Ionicons name="people-outline" size={64} color="#ccc" />
-                        <Text style={styles.emptyText}>No users found</Text>
+                        <Text style={styles.emptyText}>{t('admin.users.noUsers')}</Text>
                     </View>
                 }
             />
@@ -191,11 +193,11 @@ export default function UsersScreen() {
                 onPress={() => router.push('/(super_admin)/system-settings')}
             >
                 <Ionicons name="settings" size={20} color="#fff" />
-                <Text style={styles.settingsText}>System Settings</Text>
+                <Text style={styles.settingsText}>{t('settings.title')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
-                <Text style={styles.logoutText}>Logout</Text>
+                <Text style={styles.logoutText}>{t('settings.logout')}</Text>
             </TouchableOpacity>
         </View>
     );

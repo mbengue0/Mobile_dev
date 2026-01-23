@@ -13,8 +13,10 @@ import { supabase } from '../../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 import { useSystemSettings } from '../../hooks/useSystemSettings';
+import { useTranslation } from 'react-i18next';
 
 export default function ScannerScreen() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { colors } = useTheme();
     const [permission, requestPermission] = useCameraPermissions();
@@ -55,9 +57,9 @@ export default function ScannerScreen() {
         return (
             <View style={styles.container}>
                 <Ionicons name="camera-outline" size={64} color={colors.textSecondary} />
-                <Text style={styles.permissionText}>Camera permission required</Text>
+                <Text style={styles.permissionText}>{t('admin.scanner.permission')}</Text>
                 <TouchableOpacity style={styles.button} onPress={requestPermission}>
-                    <Text style={styles.buttonText}>Grant Permission</Text>
+                    <Text style={styles.buttonText}>{t('common.confirm')}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -121,7 +123,7 @@ export default function ScannerScreen() {
                     </View>
 
                     <Text style={styles.instruction}>
-                        Position QR code within the frame
+                        {t('admin.scanner.scanning')}
                     </Text>
 
                     {lastScanResult && (
@@ -133,7 +135,7 @@ export default function ScannerScreen() {
                                     color={lastScanResult.success ? colors.success : colors.danger}
                                 />
                                 <Text style={styles.modalTitle}>
-                                    {lastScanResult.success ? "Success!" : "Scan Failed"}
+                                    {lastScanResult.success ? t('admin.scanner.success') : t('admin.scanner.invalid')}
                                 </Text>
                                 <Text style={styles.modalMessage}>{lastScanResult.message}</Text>
 
@@ -145,7 +147,7 @@ export default function ScannerScreen() {
                                     }}
                                 >
                                     <Text style={styles.modalButtonText}>
-                                        {lastScanResult.success ? "Scan Next Ticket" : "Try Again"}
+                                        {lastScanResult.success ? t('common.confirm') : t('common.back')}
                                     </Text>
                                 </TouchableOpacity>
                             </View>
@@ -154,7 +156,7 @@ export default function ScannerScreen() {
 
                     {scanned && !lastScanResult && (
                         <View style={styles.scanningIndicator}>
-                            <Text style={styles.scanningText}>Processing...</Text>
+                            <Text style={styles.scanningText}>{t('admin.scanner.processing')}</Text>
                         </View>
                     )}
                 </View>

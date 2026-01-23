@@ -30,7 +30,14 @@
         "cashier": "Visit Cashier",
         "noTransactions": "No transactions yet",
         "pending": "Pending",
-        "expired": "Expired"
+        "expired": "Expired",
+        "invalidAmount": "Invalid Amount",
+        "enterValidAmount": "Please enter a valid amount (Min 500 FCFA)",
+        "paymentFailed": "Payment Failed",
+        "securePayment": "Secure payment via NabooPay",
+        "minDeposit": "Minimum deposit: 500 FCFA. Transactions are secured and processed instantly.",
+        "cashierInfo": "Visit an authorized Admin Cashier to top up your wallet manually.",
+        "amountPlaceholder": "Amount (e.g. 5000)"
     },
     "meals": {
         "breakfast": "Breakfast",
@@ -43,19 +50,98 @@
         "addToCart": "Add items to your cart",
         "checkout": "Checkout",
         "emptyCart": "Empty Cart",
+        "emptyCartMsg": "Please add at least one ticket to your cart",
         "confirmPurchase": "Confirm Purchase",
-        "purchaseDesc": "Buy {{quantity}} items for {{total}} FCFA?",
+        "purchaseDesc": "Buy {{summary}} for {{total}} FCFA?",
         "successTitle": "Tickets Purchased! 🎫",
-        "successMsg": "Your tickets are ready to use",
+        "successMsg": "Successfully purchased {{count}} ticket(s)",
         "maxLimit": "Maximum 10 tickets per meal type",
         "menuPreview": "Menu Preview",
-        "noMenuImage": "No menu image available"
+        "noMenuImage": "No menu image available",
+        "insufficientFunds": "Insufficient Funds",
+        "insufficientFundsMsg": "You need {{total}} FCFA but only have {{balance}} FCFA",
+        "items": "Item(s)",
+        "viewTickets": "View Tickets",
+        "purchaseFailed": "Purchase Failed"
+    },
+    "admin": {
+        "scanner": {
+            "title": "Scan QR Code",
+            "permission": "Requesting camera permission...",
+            "noAccess": "No access to camera",
+            "scanning": "Scanning...",
+            "success": "Ticket Validated",
+            "invalid": "Invalid Ticket",
+            "used": "Ticket Already Used",
+            "processing": "Processing...",
+            "validTicket": "✓ Valid {{type}} ticket",
+            "validationFailed": "Validation failed",
+            "timeWindows": "Meal Time Windows"
+        },
+        "cashier": {
+            "title": "Cashier Top-up",
+            "subtitle": "Search student by ID or Email",
+            "placeholder": "Enter student ID or email...",
+            "search": "Search Student",
+            "currentBalance": "Current Balance",
+            "amountPlaceholder": "Amount to add",
+            "confirm": "Confirm Top-up",
+            "success": "Top-up Successful",
+            "limitExceeded": "Limit Exceeded",
+            "maxTopUp": "Maximum top-up is 50,000 FCFA",
+            "confirmTitle": "Confirm Top-Up",
+            "confirmMsg": "Add {{amount}} FCFA to {{name}}'s wallet?",
+            "successMsg": "Added {{amount}} FCFA. New balance: {{balance}} FCFA",
+            "transactionFailed": "Transaction Failed"
+        },
+        "menu": {
+            "title": "Update Menu",
+            "dailyPoster": "Daily Poster",
+            "byMeal": "By Meal",
+            "uploadPoster": "Upload Poster",
+            "uploadMeal": "Upload Meal Image",
+            "pickImage": "Pick Image from Gallery",
+            "placeholder": "Select Meal Image",
+            "placeholderDaily": "Upload Daily Overview Poster",
+            "success": "Menu updated successfully!"
+        },
+        "system": {
+            "title": "System Settings",
+            "subtitle": "Configure meal times and prices",
+            "mealTimes": "⏰ Meal Time Windows (24h)",
+            "mealPrices": "💰 Meal Prices (FCFA)",
+            "start": "Start Hour",
+            "end": "End Hour",
+            "reset": "Reset to Defaults",
+            "save": "Save Changes",
+            "error": "Error loading settings",
+            "success": "Settings updated successfully",
+            "resetConfirm": "Are you sure you want to reset all settings to default values?",
+            "fillAll": "Please fill in all fields",
+            "timeError": "{{meal}} start time must be before end time",
+            "hoursError": "Hours must be between 0 and 23",
+            "priceError": "{{meal}} price must be greater than 0"
+        },
+        "users": {
+            "title": "User Management",
+            "all": "All",
+            "students": "Students",
+            "staff": "Staff",
+            "promote": "Promote to Staff",
+            "promoteConfirm": "Promote {{name}} to Admin?",
+            "noUsers": "No users found",
+            "promotedSuccess": "User promoted to admin"
+        }
     },
     "settings": {
         "title": "Settings",
         "language": "Language",
         "theme": "Theme",
         "logout": "Logout",
-        "profile": "Profile"
+        "profile": "Profile",
+        "myProfile": "My Profile",
+        "role": "Role",
+        "studentId": "Student ID",
+        "email": "Email"
     }
 }

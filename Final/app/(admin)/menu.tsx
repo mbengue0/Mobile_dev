@@ -17,11 +17,13 @@ import { decode } from 'base64-arraybuffer';
 import { useAuth } from '../../hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { useTheme } from '../../providers/ThemeProvider';
+import { useTranslation } from 'react-i18next';
 
 type DisplayMode = 'daily' | 'individual';
 type ExtendedMealType = 'breakfast' | 'lunch' | 'dinner' | 'daily_overview';
 
 export default function MenuScreen() {
+    const { t } = useTranslation();
     const { user } = useAuth();
     const { colors } = useTheme();
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -94,7 +96,7 @@ export default function MenuScreen() {
 
     const uploadMenu = async () => {
         if (!selectedImage) {
-            Alert.alert('No Image', 'Please select an image first');
+            Alert.alert(t('common.error'), t('admin.menu.placeholder'));
             return;
         }
 
@@ -138,12 +140,12 @@ export default function MenuScreen() {
 
             if (dbError) throw dbError;
 
-            Alert.alert('Success', 'Menu updated successfully!');
+            Alert.alert(t('common.success'), t('admin.menu.success'));
             setSelectedImage(null);
             refetch();
 
         } catch (error: any) {
-            Alert.alert('Upload Failed', error.message);
+            Alert.alert(t('common.error'), error.message);
         } finally {
             setUploading(false);
         }
@@ -153,7 +155,7 @@ export default function MenuScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Update Daily Menu</Text>
+            <Text style={styles.title}>{t('admin.menu.title')}</Text>
 
             {/* Mode Switcher */}
             <View style={styles.modeContainer}>
@@ -161,13 +163,13 @@ export default function MenuScreen() {
                     style={[styles.modeButton, displayMode === 'daily' && styles.modeButtonActive]}
                     onPress={() => setDisplayMode('daily')}
                 >
-                    <Text style={[styles.modeText, displayMode === 'daily' && styles.modeTextActive]}>Daily Poster</Text>
+                    <Text style={[styles.modeText, displayMode === 'daily' && styles.modeTextActive]}>{t('admin.menu.dailyPoster')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.modeButton, displayMode === 'individual' && styles.modeButtonActive]}
                     onPress={() => setDisplayMode('individual')}
                 >
-                    <Text style={[styles.modeText, displayMode === 'individual' && styles.modeTextActive]}>By Meal</Text>
+                    <Text style={[styles.modeText, displayMode === 'individual' && styles.modeTextActive]}>{t('admin.menu.byMeal')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -189,7 +191,7 @@ export default function MenuScreen() {
                                     mealType === type && styles.typeTextActive,
                                 ]}
                             >
-                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                                {t(`meals.${type}`)}
                             </Text>
                         </TouchableOpacity>
                     ))}
@@ -208,7 +210,7 @@ export default function MenuScreen() {
                             color={colors.textSecondary}
                         />
                         <Text style={styles.placeholderText}>
-                            {displayMode === 'daily' ? "Upload Daily Overview Poster" : "Select Meal Image"}
+                            {displayMode === 'daily' ? t('admin.menu.placeholderDaily') : t('admin.menu.placeholder')}
                         </Text>
                     </View>
                 )}
@@ -216,7 +218,7 @@ export default function MenuScreen() {
 
             <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
                 <Ionicons name="image-outline" size={24} color={colors.primary} />
-                <Text style={styles.pickButtonText}>Pick Image from Gallery</Text>
+                <Text style={styles.pickButtonText}>{t('admin.menu.pickImage')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -231,7 +233,7 @@ export default function MenuScreen() {
                     <ActivityIndicator color="#fff" />
                 ) : (
                     <Text style={styles.uploadButtonText}>
-                        {displayMode === 'daily' ? 'Upload Poster' : 'Upload Meal Image'}
+                        {displayMode === 'daily' ? t('admin.menu.uploadPoster') : t('admin.menu.uploadMeal')}
                     </Text>
                 )}
             </TouchableOpacity>

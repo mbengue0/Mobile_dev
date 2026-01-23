@@ -5,10 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../providers/ThemeProvider';
 
+import { useTranslation } from 'react-i18next';
+import { setLanguage } from '../../lib/i18n';
+
 export default function ProfileScreen() {
     const { profile, signOut, user } = useAuth();
     const router = useRouter();
     const { colors, isDarkMode, toggleTheme } = useTheme();
+    const { t, i18n } = useTranslation();
 
     return (
         <ScrollView style={styles(colors).container}>
@@ -25,16 +29,16 @@ export default function ProfileScreen() {
                         <Ionicons name="person-circle-outline" size={80} color={colors.primary} />
                     </View>
                     <Text style={styles(colors).name}>{profile?.full_name || 'Student'}</Text>
-                    <Text style={styles(colors).role}>Student</Text>
+                    <Text style={styles(colors).role}>{t('settings.role')}: {t('admin.users.students')}</Text>
 
                     <View style={styles(colors).infoSection}>
                         <View style={styles(colors).infoRow}>
-                            <Text style={styles(colors).label}>Student ID</Text>
+                            <Text style={styles(colors).label}>{t('settings.studentId')}</Text>
                             <Text style={styles(colors).value}>{profile?.student_id || 'N/A'}</Text>
                         </View>
                         <View style={styles(colors).divider} />
                         <View style={styles(colors).infoRow}>
-                            <Text style={styles(colors).label}>Email</Text>
+                            <Text style={styles(colors).label}>{t('settings.email')}</Text>
                             <Text style={styles(colors).value}>{profile?.email || 'N/A'}</Text>
                         </View>
                     </View>
@@ -45,7 +49,7 @@ export default function ProfileScreen() {
                     <View style={styles(colors).settingRow}>
                         <View style={styles(colors).settingInfo}>
                             <Ionicons name="moon-outline" size={22} color={colors.text} />
-                            <Text style={styles(colors).settingLabel}>Dark Mode</Text>
+                            <Text style={styles(colors).settingLabel}>{t('settings.theme')}</Text>
                         </View>
                         <Switch
                             value={isDarkMode}
@@ -54,11 +58,38 @@ export default function ProfileScreen() {
                             thumbColor="#fff"
                         />
                     </View>
+
+                    <View style={styles(colors).divider} />
+
+                    <View style={styles(colors).settingRow}>
+                        <View style={styles(colors).settingInfo}>
+                            <Ionicons name="language-outline" size={22} color={colors.text} />
+                            <Text style={styles(colors).settingLabel}>{t('settings.language')}</Text>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => setLanguage(i18n.language === 'en' ? 'fr' : 'en')}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                backgroundColor: colors.background,
+                                paddingHorizontal: 10,
+                                paddingVertical: 5,
+                                borderRadius: 8,
+                                borderWidth: 1,
+                                borderColor: colors.border
+                            }}
+                        >
+                            <Text style={{ color: colors.text, fontWeight: 'bold' }}>
+                                {i18n.language === 'en' ? 'English' : 'Français'}
+                            </Text>
+                            <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} style={{ marginLeft: 4 }} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <TouchableOpacity style={styles(colors).logoutButton} onPress={signOut}>
                     <Ionicons name="log-out-outline" size={24} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={styles(colors).logoutText}>Logout</Text>
+                    <Text style={styles(colors).logoutText}>{t('settings.logout')}</Text>
                 </TouchableOpacity>
             </View>
         </ScrollView>

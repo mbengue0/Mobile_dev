@@ -15,7 +15,10 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useRouter, Link } from 'expo-router';
 
+import { useTranslation } from 'react-i18next';
+
 export default function LoginScreen() {
+    const { t } = useTranslation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -52,7 +55,7 @@ export default function LoginScreen() {
                         style={styles.logo}
                         resizeMode="contain"
                     />
-                    <Text style={styles.title}>Welcome to Kanteen</Text>
+                    <Text style={styles.title}>{t('common.welcome')} to Kanteen</Text>
                     <Text style={styles.subtitle}>Smart Campus Dining</Text>
                 </View>
 
@@ -60,7 +63,7 @@ export default function LoginScreen() {
                 <View style={styles.form}>
                     <TextInput
                         style={styles.input}
-                        placeholder="Email Address"
+                        placeholder={t('auth.email')}
                         placeholderTextColor="#999"
                         value={email}
                         onChangeText={setEmail}
@@ -70,7 +73,7 @@ export default function LoginScreen() {
 
                     <TextInput
                         style={styles.input}
-                        placeholder="Password"
+                        placeholder={t('auth.password')}
                         placeholderTextColor="#999"
                         value={password}
                         onChangeText={setPassword}
@@ -85,14 +88,14 @@ export default function LoginScreen() {
                         {loading ? (
                             <ActivityIndicator color="#fff" />
                         ) : (
-                            <Text style={styles.buttonText}>Log In</Text>
+                            <Text style={styles.buttonText}>{t('auth.login')}</Text>
                         )}
                     </TouchableOpacity>
 
                     <Link href="/(auth)/signup" asChild>
                         <TouchableOpacity style={styles.linkButton}>
                             <Text style={styles.linkText}>
-                                Don't have an account? <Text style={styles.linkHighlight}>Sign up</Text>
+                                {t('auth.noAccount')}
                             </Text>
                         </TouchableOpacity>
                     </Link>
