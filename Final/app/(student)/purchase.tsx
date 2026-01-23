@@ -30,6 +30,7 @@ interface CartState {
 export default function PurchaseScreen() {
     const { user, profile, refreshProfile } = useAuth();
     const [cart, setCart] = useState<CartState>({ breakfast: 0, lunch: 0, dinner: 0 });
+    const [selectedMeal, setSelectedMeal] = useState<MealType>('lunch');
     const [imageError, setImageError] = useState(false);
     const queryClient = useQueryClient();
     const router = useRouter();
@@ -40,11 +41,11 @@ export default function PurchaseScreen() {
     const { data: systemSettings, isLoading: settingsLoading } = useSystemSettings();
 
     const { data: menuImage, refetch: refetchMenu } = useQuery({
-        queryKey: ['menu_image', 'daily_overview'],
+        queryKey: ['menu_image', selectedMeal],
         queryFn: async () => {
             const today = new Date().toISOString().split('T')[0];
 
-            // Try to get Today's "Daily Overview" Poster
+            // 1. Try Daily Overview first (applies to all meals)
             const { data: dailyOverview } = await supabase
                 .from('menu_images')
                 .select('image_url, menu_date, meal_type')
@@ -54,17 +55,27 @@ export default function PurchaseScreen() {
 
             if (dailyOverview) return { ...dailyOverview, isDaily: true };
 
-            // Fallback: Most Recent Daily Overview
+            // 2. Try specific meal image
+            const { data: specificMeal } = await supabase
+                .from('menu_images')
+                .select('image_url, menu_date, meal_type')
+                .eq('meal_type', selectedMeal)
+                .eq('menu_date', today)
+                .single();
+
+            if (specificMeal) return { ...specificMeal, isDaily: false };
+
+            // 3. Fallback: Most recent for this meal
             const { data: recentMenu } = await supabase
                 .from('menu_images')
                 .select('image_url, menu_date, meal_type')
-                .eq('meal_type', 'daily_overview')
+                .eq('meal_type', selectedMeal)
                 .gte('menu_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
                 .order('menu_date', { ascending: false })
                 .limit(1)
                 .single();
 
-            return recentMenu ? { ...recentMenu, isDaily: true } : null;
+            return recentMenu ? { ...recentMenu, isDaily: false } : null;
         },
     });
 
@@ -254,9 +265,14 @@ export default function PurchaseScreen() {
                             style={[
                                 styles(colors).mealCard,
                                 cart[meal] > 0 && styles(colors).mealCardActive,
+                                selectedMeal === meal && styles(colors).mealCardSelected,
                             ]}
                         >
-                            <View style={styles(colors).mealInfo}>
+                            <TouchableOpacity
+                                style={styles(colors).mealInfo}
+                                onPress={() => setSelectedMeal(meal)}
+                                activeOpacity={0.7}
+                            >
                                 <Ionicons
                                     name={getMealIcon(meal)}
                                     size={32}
@@ -276,7 +292,7 @@ export default function PurchaseScreen() {
                                         {systemSettings?.mealPrices?.[meal] || 0} FCFA
                                     </Text>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
 
                             <View style={styles(colors).stepperContainer}>
                                 <TouchableOpacity
@@ -437,6 +453,11 @@ const styles = (colors: any) => StyleSheet.create({
     },
     mealCardActive: {
         borderColor: colors.primary,
+        backgroundColor: colors.background,
+    },
+    mealCardSelected: {
+        borderColor: colors.primary,
+        borderWidth: 3,
         backgroundColor: colors.background,
     },
     mealInfo: {
