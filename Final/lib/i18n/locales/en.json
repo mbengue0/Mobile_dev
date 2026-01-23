@@ -1,0 +1,61 @@
+{
+    "common": {
+        "welcome": "Welcome",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "save": "Save",
+        "back": "Back"
+    },
+    "auth": {
+        "login": "Login",
+        "signup": "Sign Up",
+        "email": "Email",
+        "password": "Password",
+        "fullName": "Full Name",
+        "studentId": "Student ID",
+        "forgotPassword": "Forgot Password?",
+        "noAccount": "Don't have an account? Sign up",
+        "hasAccount": "Already have an account? Login",
+        "signingIn": "Signing in...",
+        "signingUp": "Creating account..."
+    },
+    "wallet": {
+        "balance": "Available Balance",
+        "transactions": "Recent Activity",
+        "topUp": "Top Up Wallet",
+        "online": "Online via NabooPay",
+        "cashier": "Visit Cashier",
+        "noTransactions": "No transactions yet",
+        "pending": "Pending",
+        "expired": "Expired"
+    },
+    "meals": {
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner",
+        "dailyOverview": "Today's Menu"
+    },
+    "purchase": {
+        "selectMeals": "Select Meals",
+        "addToCart": "Add items to your cart",
+        "checkout": "Checkout",
+        "emptyCart": "Empty Cart",
+        "confirmPurchase": "Confirm Purchase",
+        "purchaseDesc": "Buy {{quantity}} items for {{total}} FCFA?",
+        "successTitle": "Tickets Purchased! 🎫",
+        "successMsg": "Your tickets are ready to use",
+        "maxLimit": "Maximum 10 tickets per meal type",
+        "menuPreview": "Menu Preview",
+        "noMenuImage": "No menu image available"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "theme": "Theme",
+        "logout": "Logout",
+        "profile": "Profile"
+    }
+}

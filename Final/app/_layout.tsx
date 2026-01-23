@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import AnimatedSplashScreen from '../components/AnimatedSplashScreen';
 import * as SplashScreen from 'expo-splash-screen';
 import OfflineNotice from '../components/OfflineNotice';
+import { initLanguage } from '../lib/i18n';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +21,13 @@ function AuthGuard() {
 
     // Initialize notifications
     useNotifications();
+
+    // Init language on mount
+    useEffect(() => {
+        initLanguage().finally(() => {
+            // Language ready
+        });
+    }, []);
 
     useEffect(() => {
         if (loading) return;

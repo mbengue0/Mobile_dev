@@ -1,0 +1,61 @@
+{
+    "common": {
+        "welcome": "Bienvenue",
+        "loading": "Chargement...",
+        "error": "Erreur",
+        "success": "Succès",
+        "cancel": "Annuler",
+        "confirm": "Confirmer",
+        "save": "Enregistrer",
+        "back": "Retour"
+    },
+    "auth": {
+        "login": "Connexion",
+        "signup": "Inscription",
+        "email": "Email",
+        "password": "Mot de passe",
+        "fullName": "Nom complet",
+        "studentId": "Matricule",
+        "forgotPassword": "Mot de passe oublié ?",
+        "noAccount": "Pas de compte ? S'inscrire",
+        "hasAccount": "Déjà un compte ? Se connecter",
+        "signingIn": "Connexion en cours...",
+        "signingUp": "Création du compte..."
+    },
+    "wallet": {
+        "balance": "Solde disponible",
+        "transactions": "Activité récente",
+        "topUp": "Recharger le compte",
+        "online": "En ligne via NabooPay",
+        "cashier": "Visiter la caisse",
+        "noTransactions": "Aucune transaction",
+        "pending": "En attente",
+        "expired": "Expiré"
+    },
+    "meals": {
+        "breakfast": "Petit-déjeuner",
+        "lunch": "Déjeuner",
+        "dinner": "Dîner",
+        "dailyOverview": "Menu du jour"
+    },
+    "purchase": {
+        "selectMeals": "Choisir des repas",
+        "addToCart": "Ajoutez des articles au panier",
+        "checkout": "Payer",
+        "emptyCart": "Panier vide",
+        "confirmPurchase": "Confirmer l'achat",
+        "purchaseDesc": "Acheter {{quantity}} articles pour {{total}} FCFA ?",
+        "successTitle": "Tickets achetés ! 🎫",
+        "successMsg": "Vos tickets sont prêts à l'emploi",
+        "maxLimit": "Maximum 10 tickets par type de repas",
+        "menuPreview": "Aperçu du menu",
+        "noMenuImage": "Aucune image disponible"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "language": "Langue",
+        "theme": "Thème",
+        "logout": "Déconnexion",
+        "profile": "Profil"
+    }
+}
