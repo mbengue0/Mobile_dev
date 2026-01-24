@@ -39,7 +39,7 @@ const DarkColors: ThemeColors = {
     text: '#ffffff',
     textSecondary: '#aab8c2',
     border: '#2c3e50',
-    primary: '#FFD700', // Gold for Dark Mode accent
+    primary: '#40C4FF', // Vibrant Teal / Sky Blue (Modern Tech Look)
     danger: '#FF453A',
     success: '#30D158'
 };

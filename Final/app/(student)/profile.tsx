@@ -49,7 +49,7 @@ export default function ProfileScreen() {
                     <View style={styles(colors).settingRow}>
                         <View style={styles(colors).settingInfo}>
                             <Ionicons name="moon-outline" size={22} color={colors.text} />
-                            <Text style={styles(colors).settingLabel}>{t('settings.theme')}</Text>
+                            <Text style={styles(colors).settingLabel}>{t('settings.darkMode')}</Text>
                         </View>
                         <Switch
                             value={isDarkMode}
