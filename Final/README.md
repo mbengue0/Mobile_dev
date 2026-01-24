@@ -9,6 +9,7 @@
 - **Dark Mode**: Full Admin Panel support (Navy Blue theme)
 - **Modern Design**: Clean coral accent (#FF4757) with intuitive navigation
 - **Responsive UI**: Keyboard-aware forms and smooth animations
+- **Multi-Language Support**: Full English & French translations with auto-detection
 
 ### For Students
 - **Digital Wallet**: View balance and transaction history (Deposits/Purchases)
@@ -37,6 +38,11 @@
   - Reset to defaults option
 - **System Overview**: Monitor all user accounts
 
+### 🌐 Public Access (Web)
+- **Touchless Menu**: Public URL for viewing today's menu without login
+- **Live Updates**: Auto-refreshing menu display
+- **PWA Ready**: Optimized for mobile web browsers
+
 ### 🔔 Notification System
 - **Local Notifications**: Instant feedback for user actions
 - **Push Token Management**: Device registration for future server push
@@ -58,6 +64,7 @@
 - **Animations**: lottie-react-native ^7.2.0, react-native-reanimated ~3.16.1
 - **Camera**: expo-camera ~17.0.10
 - **QR Codes**: react-native-qrcode-svg
+- **Internationalization**: i18next, expo-localization
 
 ## 📋 Prerequisites
 
@@ -107,6 +114,9 @@ Scan the QR code with Expo Go app on your device.
 npx supabase functions deploy naboo-init --no-verify-jwt
 npx supabase functions deploy naboo-redirect --no-verify-jwt
 ```
+
+### 6. Web Deployment (Vercel)
+See [deployment_guide.md](deployment_guide.md) for full instructions on deploying the public menu to Vercel.
 
 ## 📁 Project Structure
 

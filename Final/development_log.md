@@ -257,3 +257,10 @@
     - Added explicit "Home" tab to separate Dashboard from Wallet.
 - **Navigation:**
     - Configured explicit Tab Bar icons for all 5 screens (Home, Tickets, Purchase, Wallet, Profile).
+
+## 35. NotificationService Type Error (Expo SDK 54)
+**Issue:** `shouldShowAlert` does not exist in type `NotificationHandler` (TypeScript Error TS2322).
+**Analysis:** In newer versions of `expo-notifications` (SDK 54+), `shouldShowAlert` has been deprecated in favor of granular controls: `shouldShowBanner` and `shouldShowList`.
+**Solution:**
+- Updated `NotificationService.ts` to replace `shouldShowAlert: true` with `shouldShowBanner: true` and `shouldShowList: true`.
+- Restored the `handleNotification` wrapper function to match the expected type signature.

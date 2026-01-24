@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     Dimensions,
     Modal,
+    useWindowDimensions,
 } from 'react-native';
 import { useTickets, Ticket } from '../../hooks/useTickets';
 import QRCode from 'react-native-qrcode-svg';
@@ -16,9 +17,6 @@ import { useTheme } from '../../providers/ThemeProvider';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.85;
 
 // --- Helper Functions ---
 
@@ -50,9 +48,10 @@ const formatDate = (dateString: string, locale: string = 'en') => {
 // --- Sub-Components ---
 
 // 1. Summary Card (The Stack) - Boarding Pass Style
-const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, onPress: () => void }) => {
+const TicketStackCard = React.memo(({ stack, colors, width, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, width: number, onPress: () => void }) => {
     const { t } = useTranslation();
     const accentColor = getMealColor(stack.type);
+    const CARD_WIDTH = width * 0.85;
 
     return (
         <TouchableOpacity
@@ -60,7 +59,7 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
             onPress={onPress}
             style={{ width: width, alignItems: 'center', justifyContent: 'center' }}
         >
-            <View style={styles(colors).cardContainer}>
+            <View style={[styles(colors).cardContainer, { width: CARD_WIDTH }]}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
                     <Text style={styles(colors).headerTitle}>{t(`meals.${stack.type}`).toUpperCase()}</Text>
@@ -92,13 +91,14 @@ const TicketStackCard = React.memo(({ stack, colors, onPress }: { stack: { type:
 });
 
 // 2. The Detailed Ticket (Inside Modal) - Boarding Pass Style
-const ModalTicketItem = React.memo(({ item, colors, index, total }: { item: Ticket; colors: any, index: number, total: number }) => {
+const ModalTicketItem = React.memo(({ item, colors, index, total, width }: { item: Ticket; colors: any, index: number, total: number, width: number }) => {
     const { t, i18n } = useTranslation();
     const accentColor = getMealColor(item.meal_type);
+    const CARD_WIDTH = width * 0.85;
 
     return (
         <View style={{ width: width, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={styles(colors).cardContainer}>
+            <View style={[styles(colors).cardContainer, { width: CARD_WIDTH }]}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
                     <Text style={styles(colors).headerTitle}>{t('tickets.boardingPass')}</Text>
@@ -172,6 +172,7 @@ const HistoryTicketRow = React.memo(({ item, colors }: { item: Ticket; colors: a
 export default function TicketsScreen() {
     const { t } = useTranslation();
     const { colors } = useTheme();
+    const { width } = useWindowDimensions();
     const insets = useSafeAreaInsets();
     const { data, isLoading, refetch, isRefetching } = useTickets();
     const [viewMode, setViewMode] = useState<'active' | 'history'>('active');
@@ -266,6 +267,7 @@ export default function TicketsScreen() {
                                 <TicketStackCard
                                     stack={item}
                                     colors={colors}
+                                    width={width}
                                     onPress={() => setSelectedStackType(item.type)}
                                 />
                             )}
@@ -273,13 +275,20 @@ export default function TicketsScreen() {
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
+                            // Web-specific snapping
+                            snapToInterval={width}
                             snapToAlignment="center"
                             decelerationRate="fast"
+                            bounces={true}
                             onViewableItemsChanged={onViewableItemsChanged}
                             viewabilityConfig={viewabilityConfig}
                             refreshControl={
                                 <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                             }
+                            contentContainerStyle={{
+                                // Ensure standard behavior on web
+                                flexGrow: 1,
+                            }}
                         />
                     ) : (
                         <View style={styles(colors).emptyState}>
@@ -340,12 +349,14 @@ export default function TicketsScreen() {
                                     colors={colors}
                                     index={index}
                                     total={modalTickets.length}
+                                    width={width}
                                 />
                             )}
                             keyExtractor={(item) => item.id}
                             horizontal
                             pagingEnabled
                             showsHorizontalScrollIndicator={false}
+                            snapToInterval={width}
                             snapToAlignment="center"
                             decelerationRate="fast"
                         />
@@ -405,7 +416,7 @@ const styles = (colors: any) => StyleSheet.create({
     },
     // Ticket Stack Card
     cardContainer: {
-        width: CARD_WIDTH,
+        // width handled dynamically
         borderRadius: 20,
         backgroundColor: colors.card,
         shadowColor: '#000',
