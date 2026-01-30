@@ -22,10 +22,36 @@ export default function SignupScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
+    const [studentId, setStudentId] = useState('');
+
     const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [emailError, setEmailError] = useState<string | null>(null);
+    const [nameError, setNameError] = useState<string | null>(null);
+
     const [loading, setLoading] = useState(false);
     const { signUp } = useAuth();
     const router = useRouter();
+
+    const validateName = (text: string) => {
+        setFullName(text);
+        if (/\d/.test(text)) {
+            setNameError('Names cannot contain numbers.');
+        } else if (text.length > 0 && text.length < 2) {
+            setNameError('Name is too short.');
+        } else {
+            setNameError(null);
+        }
+    };
+
+    const validateEmail = (text: string) => {
+        setEmail(text);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (text.length > 0 && !emailRegex.test(text)) {
+            setEmailError('Please enter a valid email address.');
+        } else {
+            setEmailError(null);
+        }
+    };
 
     const validatePassword = (text: string) => {
         setPassword(text);
@@ -33,7 +59,7 @@ export default function SignupScreen() {
         const minLength = 6;
 
         if (text.length === 0) {
-            setPasswordError(null); // Reset when empty, handling in handleSignup
+            setPasswordError(null);
             return;
         }
 
@@ -52,29 +78,38 @@ export default function SignupScreen() {
             return;
         }
 
-        if (passwordError) {
-            Alert.alert('Weak Password', passwordError);
+        if (passwordError || emailError || nameError) {
+            Alert.alert('Invalid Details', 'Please fix the errors in the form.');
             return;
         }
 
-        // Double check just in case
-        if (password.length < 6 || !/\d/.test(password)) {
-            Alert.alert('Weak Password', 'Password must be at least 6 characters and contain a number.');
+        // Final sanity check
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            Alert.alert('Invalid Email', 'Please enter a valid email address.');
             return;
         }
 
         try {
             setLoading(true);
-            const { error } = await signUp(email, password, fullName);
+            const { error } = await signUp(email, password, fullName, studentId);
 
             if (error) {
-                Alert.alert('Signup Failed', error.message || 'An unknown error occurred');
+                const msg = error.message?.toLowerCase() || '';
+                if (msg.includes('duplicate key') || msg.includes('unique constraint') || msg.includes('already registered')) {
+                    Alert.alert(
+                        'Registration Failed',
+                        'This Student ID or Email is already registered. Please login or check your details.'
+                    );
+                } else {
+                    Alert.alert('Signup Failed', error.message || 'An unknown error occurred');
+                }
             } else {
-                // Success!
-                Alert.alert('Success', 'Account created! Please log in.', [
+                Alert.alert('Welcome!', 'Account created successfully. Logging you in...', [
                     {
                         text: 'OK',
-                        onPress: () => router.replace('/(auth)/login')
+                        onPress: () => {
+                            router.replace('/(auth)/login');
+                        }
                     },
                 ]);
             }
@@ -105,36 +140,60 @@ export default function SignupScreen() {
 
                 {/* Form Section */}
                 <View style={styles.form}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder={t('auth.fullName')}
-                        placeholderTextColor="#999"
-                        value={fullName}
-                        onChangeText={setFullName}
-                    />
+                    <View>
+                        <TextInput
+                            style={[styles.input, nameError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : { marginBottom: 4 }]}
+                            placeholder={t('auth.fullName')}
+                            placeholderTextColor="#999"
+                            value={fullName}
+                            onChangeText={validateName}
+                        />
+                        <Text style={[styles.helperText, nameError ? { color: '#FF4444' } : {}]}>
+                            {nameError || "No numbers. (e.g. Jean Dupont)"}
+                        </Text>
+                    </View>
 
-                    <TextInput
-                        style={styles.input}
-                        placeholder={t('auth.email')}
-                        placeholderTextColor="#999"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                    />
+                    <View style={{ marginBottom: 16 }}>
+                        <TextInput
+                            style={[styles.input, { marginBottom: 4 }]}
+                            placeholder={`${t('settings.studentId') || "Student ID"} (Optional)`}
+                            placeholderTextColor="#999"
+                            value={studentId}
+                            onChangeText={setStudentId}
+                            autoCapitalize="characters"
+                        />
+                        <Text style={styles.helperText}>
+                            Unique school ID. (e.g. ST-202412)
+                        </Text>
+                    </View>
 
                     <View>
                         <TextInput
-                            style={[styles.input, passwordError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : {}]}
+                            style={[styles.input, emailError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : { marginBottom: 4 }]}
+                            placeholder={t('auth.email')}
+                            placeholderTextColor="#999"
+                            value={email}
+                            onChangeText={validateEmail}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                        />
+                        <Text style={[styles.helperText, emailError ? { color: '#FF4444' } : {}]}>
+                            {emailError || "Must contain '@' and '.'. (e.g. correct@email.com)"}
+                        </Text>
+                    </View>
+
+                    <View>
+                        <TextInput
+                            style={[styles.input, passwordError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : { marginBottom: 4 }]}
                             placeholder={t('auth.password')}
                             placeholderTextColor="#999"
                             value={password}
                             onChangeText={validatePassword}
                             secureTextEntry
                         />
-                        {passwordError ? (
-                            <Text style={{ color: '#FF4444', marginBottom: 12, marginLeft: 4, fontSize: 12 }}>{passwordError}</Text>
-                        ) : null}
+                        <Text style={[styles.helperText, passwordError ? { color: '#FF4444' } : {}]}>
+                            {passwordError || "Min 6 characters, at least 1 number."}
+                        </Text>
                     </View>
 
                     <TouchableOpacity
@@ -143,7 +202,7 @@ export default function SignupScreen() {
                         disabled={loading || !!passwordError || !password}
                     >
                         {loading ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color="#132439" />
                         ) : (
                             <Text style={styles.buttonText}>{t('auth.signup')}</Text>
                         )}
@@ -239,4 +298,10 @@ const styles = StyleSheet.create({
         color: '#FFD700', // Gold for emphasis
         fontWeight: 'bold',
     },
+    helperText: {
+        color: '#CCCCCC',
+        fontSize: 12,
+        marginLeft: 4,
+        marginTop: 2,
+    }
 });

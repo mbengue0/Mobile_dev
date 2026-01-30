@@ -9,6 +9,7 @@ import {
     Dimensions,
     Modal,
     useWindowDimensions,
+    Platform,
 } from 'react-native';
 import { useTickets, Ticket } from '../../hooks/useTickets';
 import QRCode from 'react-native-qrcode-svg';
@@ -48,18 +49,20 @@ const formatDate = (dateString: string, locale: string = 'en') => {
 // --- Sub-Components ---
 
 // 1. Summary Card (The Stack) - Boarding Pass Style
-const TicketStackCard = React.memo(({ stack, colors, width, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, width: number, onPress: () => void }) => {
+const TicketStackCard = React.memo(({ stack, colors, width, itemWidth, onPress }: { stack: { type: string, count: number, tickets: Ticket[] }, colors: any, width: number, itemWidth: number, onPress: () => void }) => {
     const { t } = useTranslation();
     const accentColor = getMealColor(stack.type);
-    const CARD_WIDTH = width * 0.85;
+
+    const { width: windowWidth } = useWindowDimensions();
+    const isDesktopWeb = Platform.OS === 'web' && windowWidth >= 768;
 
     return (
         <TouchableOpacity
             activeOpacity={0.9}
             onPress={onPress}
-            style={{ width: width, alignItems: 'center', justifyContent: 'center' }}
+            style={{ width: itemWidth, alignItems: 'center', justifyContent: 'center', paddingHorizontal: isDesktopWeb ? 20 : 0 }}
         >
-            <View style={[styles(colors).cardContainer, { width: CARD_WIDTH }]}>
+            <View style={[styles(colors).cardContainer, { width: width }]}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
                     <Text style={styles(colors).headerTitle}>{t(`meals.${stack.type}`).toUpperCase()}</Text>
@@ -91,14 +94,16 @@ const TicketStackCard = React.memo(({ stack, colors, width, onPress }: { stack: 
 });
 
 // 2. The Detailed Ticket (Inside Modal) - Boarding Pass Style
-const ModalTicketItem = React.memo(({ item, colors, index, total, width }: { item: Ticket; colors: any, index: number, total: number, width: number }) => {
+const ModalTicketItem = React.memo(({ item, colors, index, total, width, itemWidth }: { item: Ticket; colors: any, index: number, total: number, width: number, itemWidth: number }) => {
     const { t, i18n } = useTranslation();
     const accentColor = getMealColor(item.meal_type);
-    const CARD_WIDTH = width * 0.85;
+
+    const { width: windowWidth } = useWindowDimensions();
+    const isDesktopWeb = Platform.OS === 'web' && windowWidth >= 768;
 
     return (
-        <View style={{ width: width, alignItems: 'center', justifyContent: 'center' }}>
-            <View style={[styles(colors).cardContainer, { width: CARD_WIDTH }]}>
+        <View style={{ width: itemWidth, alignItems: 'center', justifyContent: 'center', paddingHorizontal: isDesktopWeb ? 20 : 0 }}>
+            <View style={[styles(colors).cardContainer, { width: width }]}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
                     <Text style={styles(colors).headerTitle}>{t('tickets.boardingPass')}</Text>
@@ -218,6 +223,19 @@ export default function TicketsScreen() {
             .filter(stack => stack.count > 0);
     }, [data?.active]);
 
+    // Calculate card width for web vs native
+    const isMobileWeb = Platform.OS === 'web' && width < 768; // Mobile breakpoint
+
+    // On Mobile Web, behave like Native (85% width, Full Item Width for paging)
+    // On Desktop Web, use Fixed Width (400px) + Centering
+    const cardWidth = (Platform.OS === 'web' && !isMobileWeb) ? Math.min(width * 0.85, 400) : width * 0.85;
+
+    const itemWidth = (Platform.OS === 'web' && !isMobileWeb) ? cardWidth + 40 : width; // Full width for native/mobile-web paging
+
+    const horizontalPadding = (Platform.OS === 'web' && !isMobileWeb) ? Math.max(0, (width - itemWidth) / 2) : 0;
+
+    const shouldPaging = Platform.OS !== 'web' || isMobileWeb; // Enable paging on Native AND Mobile Web
+
     const modalTickets = useMemo(() => {
         if (!selectedStackType) return [];
         return stacks.find(s => s.type === selectedStackType)?.tickets || [];
@@ -267,16 +285,16 @@ export default function TicketsScreen() {
                                 <TicketStackCard
                                     stack={item}
                                     colors={colors}
-                                    width={width}
+                                    width={cardWidth}
+                                    itemWidth={itemWidth}
                                     onPress={() => setSelectedStackType(item.type)}
                                 />
                             )}
                             keyExtractor={(item) => item.type}
                             horizontal
-                            pagingEnabled
-                            showsHorizontalScrollIndicator={false}
-                            // Web-specific snapping
-                            snapToInterval={width}
+                            pagingEnabled={shouldPaging}
+                            showsHorizontalScrollIndicator={Platform.OS === 'web' && !isMobileWeb}
+                            snapToInterval={itemWidth}
                             snapToAlignment="center"
                             decelerationRate="fast"
                             bounces={true}
@@ -286,8 +304,9 @@ export default function TicketsScreen() {
                                 <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
                             }
                             contentContainerStyle={{
-                                // Ensure standard behavior on web
                                 flexGrow: 1,
+                                alignItems: 'center',
+                                paddingHorizontal: horizontalPadding,
                             }}
                         />
                     ) : (
@@ -349,16 +368,22 @@ export default function TicketsScreen() {
                                     colors={colors}
                                     index={index}
                                     total={modalTickets.length}
-                                    width={width}
+                                    width={cardWidth}
+                                    itemWidth={itemWidth}
                                 />
                             )}
                             keyExtractor={(item) => item.id}
                             horizontal
-                            pagingEnabled
-                            showsHorizontalScrollIndicator={false}
-                            snapToInterval={width}
+                            pagingEnabled={shouldPaging}
+                            showsHorizontalScrollIndicator={Platform.OS === 'web' && !isMobileWeb}
+                            snapToInterval={itemWidth}
                             snapToAlignment="center"
                             decelerationRate="fast"
+                            contentContainerStyle={{
+                                flexGrow: 1,
+                                alignItems: 'center',
+                                paddingHorizontal: horizontalPadding,
+                            }}
                         />
                     </View>
                     <Text style={styles(colors).modalHint}>{t('tickets.scannerHint')}</Text>

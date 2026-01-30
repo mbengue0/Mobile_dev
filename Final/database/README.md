@@ -2,6 +2,7 @@
 
 ## Migrations
 - `010_daily_overview.sql`: Updates `menu_images` table constraint to allow `daily_overview` as a meal type.
+- `012_update_signup_for_manual_id.sql`: Updates `handle_new_user` trigger to support manual `student_id` input during signup.
 
 # Database Organization
 

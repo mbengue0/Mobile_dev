@@ -264,3 +264,11 @@
 **Solution:**
 - Updated `NotificationService.ts` to replace `shouldShowAlert: true` with `shouldShowBanner: true` and `shouldShowList: true`.
 - Restored the `handleNotification` wrapper function to match the expected type signature.
+
+## 36. Student ID Logic & Sign Up Refactor
+**Requirement:** Allow students to sign up with their existing School ID (manual input) instead of auto-generated "ST-XXXX". Admin needs this ID for wallet top-ups.
+**Changes:**
+- **Frontend (`signup.tsx`):** Added `Student ID` input field. Implemented specific error handling for "Duplicate Key" (already registered) errors.
+- **Hook (`useAuth.tsx`):** Updated `signUp` function to pass `studentId` in `options.data`.
+- **Database (`012_update_signup_for_manual_id.sql`):** Updated `handle_new_user` trigger to prioritize `raw_user_meta_data->>'student_id'` before falling back to auto-generation.
+**Result:** Clearer UX with "Welcome" success alerts and actionable error messages for duplicate IDs.
