@@ -103,7 +103,7 @@ const ModalTicketItem = React.memo(({ item, colors, index, total, width, itemWid
 
     return (
         <View style={{ width: itemWidth, alignItems: 'center', justifyContent: 'center', paddingHorizontal: isDesktopWeb ? 20 : 0 }}>
-            <View style={[styles(colors).cardContainer, { width: width }]}>
+            <View style={[styles(colors).cardContainer, { width: width, overflow: 'hidden' }]}>
                 {/* 1. Header Accent */}
                 <View style={[styles(colors).cardHeaderAccent, { backgroundColor: accentColor }]}>
                     <Text style={styles(colors).headerTitle}>{t('tickets.boardingPass')}</Text>
@@ -227,14 +227,17 @@ export default function TicketsScreen() {
     const isMobileWeb = Platform.OS === 'web' && width < 768; // Mobile breakpoint
 
     // On Mobile Web, behave like Native (85% width, Full Item Width for paging)
-    // On Desktop Web, use Fixed Width (400px) + Centering
+    // Mobile Web: Behave like Native (85% width) but DISABLE paging to prevent scroll locking
+    // Desktop Web: Fixed Width (400px) + Centering
     const cardWidth = (Platform.OS === 'web' && !isMobileWeb) ? Math.min(width * 0.85, 400) : width * 0.85;
 
-    const itemWidth = (Platform.OS === 'web' && !isMobileWeb) ? cardWidth + 40 : width; // Full width for native/mobile-web paging
+    const itemWidth = (Platform.OS === 'web' && !isMobileWeb) ? cardWidth + 40 : width; // Full width for native/mobile-web
 
+    // Center only on Desktop Web
     const horizontalPadding = (Platform.OS === 'web' && !isMobileWeb) ? Math.max(0, (width - itemWidth) / 2) : 0;
 
-    const shouldPaging = Platform.OS !== 'web' || isMobileWeb; // Enable paging on Native AND Mobile Web
+    // Only use Native Paging on iOS/Android. Web uses CSS scroll-snap implicitly via snapToInterval or free scroll
+    const shouldPaging = Platform.OS !== 'web';
 
     const modalTickets = useMemo(() => {
         if (!selectedStackType) return [];
