@@ -23,6 +23,7 @@ export default function SignupScreen() {
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [studentId, setStudentId] = useState('');
+    const [inviteCode, setInviteCode] = useState('');
 
     const [passwordError, setPasswordError] = useState<string | null>(null);
     const [emailError, setEmailError] = useState<string | null>(null);
@@ -73,8 +74,8 @@ export default function SignupScreen() {
     };
 
     const handleSignup = async () => {
-        if (!email || !password || !fullName) {
-            Alert.alert('Missing Fields', 'Please fill in all fields');
+        if (!email || !password || !fullName || !inviteCode) {
+            Alert.alert('Missing Fields', 'Please fill in all fields (including School Code)');
             return;
         }
 
@@ -91,7 +92,7 @@ export default function SignupScreen() {
 
         try {
             setLoading(true);
-            const { error } = await signUp(email, password, fullName, studentId);
+            const { error } = await signUp(email, password, fullName, studentId, inviteCode);
 
             if (error) {
                 const msg = error.message?.toLowerCase() || '';
@@ -149,21 +150,35 @@ export default function SignupScreen() {
                             onChangeText={validateName}
                         />
                         <Text style={[styles.helperText, nameError ? { color: '#FF4444' } : {}]}>
-                            {nameError || "No numbers. (e.g. Jean Dupont)"}
+                            {nameError || "No numbers. (e.g. Mbaye Fall)"}
                         </Text>
                     </View>
 
                     <View style={{ marginBottom: 16 }}>
                         <TextInput
                             style={[styles.input, { marginBottom: 4 }]}
-                            placeholder={`${t('settings.studentId') || "Student ID"} (Optional)`}
+                            placeholder={t('settings.studentId') || "Student ID"}
                             placeholderTextColor="#999"
                             value={studentId}
                             onChangeText={setStudentId}
                             autoCapitalize="characters"
                         />
                         <Text style={styles.helperText}>
-                            Unique school ID. (e.g. ST-202412)
+                            Optional. (e.g. ST-202412)
+                        </Text>
+                    </View>
+
+                    <View style={{ marginBottom: 16 }}>
+                        <TextInput
+                            style={[styles.input, { marginBottom: 4 }]}
+                            placeholder="School Code"
+                            placeholderTextColor="#999"
+                            value={inviteCode}
+                            onChangeText={setInviteCode}
+                            autoCapitalize="characters"
+                        />
+                        <Text style={styles.helperText}>
+                            Required. Example: DAUST-2025
                         </Text>
                     </View>
 
@@ -291,8 +306,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     linkText: {
-        color: '#CCCCCC', // Light grey for readability on Navy
+        color: '#40C4FF', // Teal for clearer call-to-action
         fontSize: 14,
+        textDecorationLine: 'underline',
+        fontWeight: '600',
     },
     linkHighlight: {
         color: '#FFD700', // Gold for emphasis

@@ -175,8 +175,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     linkText: {
-        color: '#CCCCCC', // Light grey for readability on Navy
+        color: '#40C4FF', // Teal for clearer call-to-action
         fontSize: 14,
+        textDecorationLine: 'underline',
+        fontWeight: '600',
     },
     linkHighlight: {
         color: '#FFD700', // Gold for emphasis

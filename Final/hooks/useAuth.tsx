@@ -14,6 +14,7 @@ interface Profile {
     notifications_enabled?: boolean;
     last_notification_at?: string | null;
     created_at: string;
+    institution_id?: string; // Multi-tenant support
 }
 
 interface AuthContextType {
@@ -22,7 +23,7 @@ interface AuthContextType {
     profile: Profile | null;
     loading: boolean;
     signIn: (email: string, password: string) => Promise<{ error: any }>;
-    signUp: (email: string, password: string, fullName: string, studentId: string) => Promise<{ error: any }>;
+    signUp: (email: string, password: string, fullName: string, studentId: string, inviteCode?: string) => Promise<{ error: any }>;
     signOut: () => Promise<void>;
     refreshProfile: () => Promise<void>;
 }
@@ -46,38 +47,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (error) {
                 // Ghost session detected - profile missing
                 if (error.code === 'PGRST116') {
-                    console.warn('Ghost session detected - attempting to heal...');
+                    console.warn('Ghost session detected - profile missing. Waiting for backend trigger...');
+                    // Legacy client-side healing removed as it conflicts with Multi-Tenant constraints.
+                    // The backend trigger `handle_new_user` is the single source of truth.
 
-                    // Attempt to create the profile manually
-                    // We need session data for this, so we'll check if we can get it from the current user state or session
-                    const { data: { user } } = await supabase.auth.getUser();
+                    // Optional: Retry once after small delay in case trigger is slow?
+                    await new Promise(r => setTimeout(r, 2000));
+                    const retry = await supabase.from('profiles').select('*').eq('id', userId).single();
+                    if (retry.data) return retry.data as Profile;
 
-                    if (user && user.id === userId) {
-                        console.log('Self-healing: Creating missing profile...');
-                        const newProfile = {
-                            id: user.id,
-                            email: user.email!,
-                            full_name: user.user_metadata?.full_name || 'Student',
-                            role: 'student' as const,
-                            wallet_balance: 0,
-                            student_id: `ST-${Math.floor(Math.random() * 100000).toString().padStart(5, '0')}`
-                        };
-
-                        const { error: insertError } = await supabase
-                            .from('profiles')
-                            .insert(newProfile);
-
-                        if (!insertError) {
-                            console.log('Self-healing successful! Profile created.');
-                            // Return the new profile immediately (created_at might be missing but that's ok for UI)
-                            return { ...newProfile, created_at: new Date().toISOString() };
-                        } else {
-                            console.error('Self-healing failed:', insertError);
-                        }
-                    }
-
-                    // If healing failed, then sign out
-                    console.log('Healing failed or user mismatch - logging out');
+                    console.log('Profile still missing - logging out');
                     await signOut();
                     return null;
                 }
@@ -113,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
     };
 
-    const signUp = async (email: string, password: string, fullName: string, studentId: string) => {
+    const signUp = async (email: string, password: string, fullName: string, studentId: string, inviteCode?: string) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -121,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 data: {
                     full_name: fullName,
                     student_id: studentId,
+                    invite_code: inviteCode, // Pass to DB Trigger for Institution assignment
                 },
             },
         });
