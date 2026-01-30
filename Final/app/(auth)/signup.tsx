@@ -13,6 +13,7 @@ import {
     ScrollView
 } from 'react-native';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabase';
 import { useRouter, Link } from 'expo-router';
 
 import { useTranslation } from 'react-i18next';
@@ -92,20 +93,39 @@ export default function SignupScreen() {
 
         try {
             setLoading(true);
-            const { error } = await signUp(email, password, fullName, studentId, inviteCode);
+            const { data: school, error: schoolError } = await supabase
+                .from('institutions')
+                .select('id, name')
+                .eq('invite_code', inviteCode.trim())
+                .maybeSingle();
+
+            if (schoolError || !school) {
+                setLoading(false);
+                Alert.alert(
+                    'School Code Error',
+                    'The School Code you entered was not found. Please double-check it. (Example: DAUST-2025)'
+                );
+                return;
+            }
+
+            const { error } = await signUp(email, password, fullName, studentId, inviteCode.trim());
 
             if (error) {
                 const msg = error.message?.toLowerCase() || '';
+
                 if (msg.includes('duplicate key') || msg.includes('unique constraint') || msg.includes('already registered')) {
                     Alert.alert(
-                        'Registration Failed',
-                        'This Student ID or Email is already registered. Please login or check your details.'
+                        'Already Registered',
+                        'This Email or Student ID is already linked to an account. Please login.'
                     );
+                } else if (msg.includes('database error')) {
+                    // Generic triggers error from Supabase
+                    Alert.alert('Registration Failed', 'There was a system error saving your profile. Please try again or contact support.');
                 } else {
                     Alert.alert('Signup Failed', error.message || 'An unknown error occurred');
                 }
             } else {
-                Alert.alert('Welcome!', 'Account created successfully. Logging you in...', [
+                Alert.alert('Welcome to ' + school.name + '!', 'Account created successfully. Logging you in...', [
                     {
                         text: 'OK',
                         onPress: () => {

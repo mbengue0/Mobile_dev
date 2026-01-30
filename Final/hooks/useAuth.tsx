@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { AppState, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -123,25 +124,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null);
     };
 
+    const [lastActive, setLastActive] = useState<number>(Date.now());
+    const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes inactivity
+
+    // 1. Initial Session Check (Robust)
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
+        let mounted = true;
 
-            if (session?.user) {
-                fetchProfile(session.user.id).then(prof => {
-                    setProfile(prof);
-                    setLoading(false);
-                });
-            } else {
-                setLoading(false);
+        async function initAuth() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                setSession(session);
+                setUser(session?.user ?? null);
+
+                if (session?.user) {
+                    const prof = await fetchProfile(session.user.id);
+                    if (mounted) setProfile(prof);
+                }
+            } catch (e) {
+                console.warn('Auth Eval Error:', e);
+            } finally {
+                if (mounted) setLoading(false);
             }
-        });
+        }
 
-        // Listen for auth changes
+        initAuth();
+
+        // 2. Auth State Listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
+                if (!mounted) return;
                 setSession(session);
                 setUser(session?.user ?? null);
 
@@ -155,8 +167,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
 
         return () => {
+            mounted = false;
             subscription.unsubscribe();
         };
+    }, []);
+
+    // 3. App State Listener (Auto-Logout on Background)
+    useEffect(() => {
+        const handleAppStateChange = async (nextAppState: string) => {
+            if (nextAppState === 'background') {
+                // App went to background: Record time
+                await AsyncStorage.setItem('last_active_timestamp', Date.now().toString());
+            } else if (nextAppState === 'active') {
+                // App came to foreground: Check time diff
+                const storedTimestamp = await AsyncStorage.getItem('last_active_timestamp');
+                if (storedTimestamp) {
+                    const diff = Date.now() - parseInt(storedTimestamp, 10);
+                    if (diff > SESSION_TIMEOUT) {
+                        console.log('Session timed out due to inactivity.');
+                        await signOut();
+                        Alert.alert('Session Expired', 'You have been logged out due to inactivity.');
+                    }
+                }
+            }
+        };
+
+        const sub = AppState.addEventListener('change', handleAppStateChange);
+        return () => sub.remove();
     }, []);
 
     return (
