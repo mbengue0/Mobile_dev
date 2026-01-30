@@ -199,11 +199,34 @@ export default function UsersScreen() {
             <TouchableOpacity style={styles.logoutButton} onPress={signOut}>
                 <Text style={styles.logoutText}>{t('settings.logout')}</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.fab}
+                onPress={() => router.push('/(super_admin)/create-staff')}
+            >
+                <Ionicons name="add" size={30} color="#fff" />
+            </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
+    fab: {
+        position: 'absolute',
+        bottom: 90, // Above tabs/logout
+        right: 20,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: '#5856D6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 6,
+    },
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',

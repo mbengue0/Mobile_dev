@@ -85,7 +85,7 @@ npm install
 
 1. Go to your [Supabase Dashboard](https://app.supabase.com)
 2. Create a new project or use existing one
-3. Go to **SQL Editor** and run the `schema.sql` file
+3. Go to **SQL Editor** and run `database/migrations/000_baseline_v2.sql` (The single source of truth)
 4. Copy your project URL and anon key from **Settings > API**
 5. Update `.env` file:
 
@@ -94,11 +94,11 @@ EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-### 3. Create First Super Admin
+### 3. Create First Institution & Admin
 
-1. Sign up a user via the app
-2. In Supabase Dashboard → **Table Editor** → `profiles`
-3. Find your user and change `role` from `student` to `super_admin`
+1. In Supabase **SQL Editor**, check the `institutions` table. The baseline creates a default one (`DAUST`, Code: `DAUST-2025`).
+2. Sign up a user via the app using this **School Code**.
+3. In Supabase Dashboard → **Table Editor** → `profiles`, change `role` to `super_admin`.
 
 ### 4. Run the App
 
@@ -108,11 +108,15 @@ npm start
 
 Scan the QR code with Expo Go app on your device.
 
-### 5. Deploy Edge Functions (Payments)
+### 5. Deploy Edge Functions
+
+Required for **NabooPay** and **Direct Staff Creation**:
 
 ```bash
-npx supabase functions deploy naboo-init --no-verify-jwt
-npx supabase functions deploy naboo-redirect --no-verify-jwt
+# If you don't have the CLI installed locally, use npx:
+npx -y supabase functions deploy naboo-init --no-verify-jwt
+npx -y supabase functions deploy naboo-redirect --no-verify-jwt
+npx -y supabase functions deploy create-user --no-verify-jwt
 ```
 
 ### 6. Web Deployment (Vercel)
@@ -156,9 +160,11 @@ Final/
 
 ## 🔒 Security Features
 
+- **Multi-Tenant Isolation**: Strict data segregation by `institution_id`
+- **School Code Validation**: Signups require a valid Institution Invite Code
 - **Row Level Security (RLS)**: Database-level access control
 - **SECURITY DEFINER Functions**: Prevent RLS recursion
-- **Ghost Session Detection**: Auto-logout on profile corruption
+- **Session Security**: Auto-logout after 5 minutes of inactivity + Ghost detection
 - **Atomic Transactions**: Prevent double-spend and race conditions
 - **Role-based Access**: Student/Admin/Super Admin permissions
 
@@ -200,8 +206,9 @@ Final/
 
 ### Super Admin Flow
 1. **Users**: View all users with filtering
-2. **Promote**: Upgrade students to admin staff
-3. **System Settings**: Configure meal times and prices
+2. **Create Staff**: Manually create new admin accounts (linked to school)
+3. **Promote**: Upgrade students to admin staff
+4. **System Settings**: Configure meal times and prices
    - Adjust time windows (24-hour format)
    - Set prices per meal type
    - Reset to defaults if needed

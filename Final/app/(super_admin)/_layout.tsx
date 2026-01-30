@@ -28,6 +28,12 @@ export default function SuperAdminLayout() {
                     title: t('navigation.system'),
                 }}
             />
+            <Stack.Screen
+                name="create-staff"
+                options={{
+                    title: 'Create Staff',
+                }}
+            />
         </Stack>
     );
 }
