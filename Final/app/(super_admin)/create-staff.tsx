@@ -147,6 +147,8 @@ export default function CreateStaffScreen() {
                     'Already Registered',
                     'This Email is already in use. Please check the Users list.'
                 );
+            } else if (msg.includes('plan limit') || msg.includes('upgrade')) {
+                Alert.alert('Plan Limit Reached', err.message || 'You have reached the maximum number of admins for your plan.');
             } else if (msg.includes('database error') || msg.includes('upstream')) {
                 Alert.alert('System Error', 'There was a problem creating the account. Please try again or check logs.');
             } else {

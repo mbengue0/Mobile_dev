@@ -62,27 +62,25 @@ serve(async (req: Request) => {
 
         const institutionId = callerProfile.institution_id;
 
-        // 5. Get Institution Invite Code (Required for Trigger)
+        // 5. Get Institution Details & Limits
         const { data: institution, error: instError } = await supabaseAdmin
             .from('institutions')
-            .select('invite_code')
+            .select('invite_code, max_admins') // Added max_admins
             .eq('id', institutionId)
             .single();
 
         if (instError || !institution) {
             console.error("Institution Lookup Error:", instError);
 
-            // FALLBACK STRATEGY: Try to find by known Invite Code 'DAUST-2025'
-            // This handles cases where ID might be mismatched but the intent is clear (Super Admin)
+            // FALLBACK (Retained for robustness, though limits might be tricky here. Let's assume default strictness if fallback used or skip?)
             const { data: fallbackInst, error: fallbackError } = await supabaseAdmin
                 .from('institutions')
-                .select('invite_code')
+                .select('invite_code, max_admins')
                 .eq('invite_code', 'DAUST-2025')
                 .maybeSingle();
 
             if (fallbackInst) {
                 console.log("✅ Recovered using Fallback Institution (DAUST-2025)");
-                // Hack: Mutate the 'institution' variable to use the fallback
                 institution = fallbackInst;
             } else {
                 return new Response(JSON.stringify({
@@ -93,6 +91,36 @@ serve(async (req: Request) => {
                 })
             }
         }
+
+        // --- BUSINESS LIMIT CHECK ---
+        const maxAdmins = institution.max_admins ?? 2; // Default to 2 if null (schema says not null default 2, but safe coding)
+
+        const { count: currentAdmins, error: countError } = await supabaseAdmin
+            .from('profiles')
+            .select('id', { count: 'exact', head: true }) // optimized count check
+            .eq('institution_id', institutionId) // Use the resolved ID (fallback or real)
+            .eq('role', 'admin');
+
+        if (countError) {
+            console.error("Failed to count admins:", countError);
+            // Fail open or closed? Closed for security.
+            return new Response(JSON.stringify({ error: "System Error: Could not verify plan limits." }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200,
+            })
+        }
+
+        console.log(`📊 Limit Check: Used ${currentAdmins} / Max ${maxAdmins}`);
+
+        if ((currentAdmins || 0) >= maxAdmins) {
+            return new Response(JSON.stringify({
+                error: `Plan Limit Reached. Your institution is limited to ${maxAdmins} admins. Please upgrade.`
+            }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200, // Client handles 200 OK with error body best
+            })
+        }
+        // -----------------------------
 
         // 6. Parse Request Body
         const { email, password, full_name } = await req.json();
