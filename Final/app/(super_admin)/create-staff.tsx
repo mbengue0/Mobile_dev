@@ -34,7 +34,7 @@ export default function CreateStaffScreen() {
         setFullName(text);
         if (/\d/.test(text)) {
             setNameError('Names cannot contain numbers.');
-        } else if (text.length > 0 && text.length < 2) {
+        } else if (text.length > 0 && text.trim().length < 2) {
             setNameError('Name is too short.');
         } else {
             setNameError(null);
@@ -53,7 +53,8 @@ export default function CreateStaffScreen() {
 
     const validatePassword = (text: string) => {
         setPassword(text);
-        const hasNumber = /\d/;
+        const hasNumber = /\d/.test(text);
+        const hasLetter = /[a-zA-Z]/.test(text);
         const minLength = 6;
 
         if (text.length === 0) {
@@ -63,34 +64,64 @@ export default function CreateStaffScreen() {
 
         if (text.length < minLength) {
             setPasswordError('Password must be at least 6 characters');
-        } else if (!hasNumber.test(text)) {
+        } else if (!hasNumber) {
             setPasswordError('Password must contain at least one number');
+        } else if (!hasLetter) {
+            setPasswordError('Password must contain at least one letter');
         } else {
             setPasswordError(null);
         }
     };
 
     const handleCreate = async () => {
-        if (!email || !password || !fullName) {
+        const cleanName = fullName.trim();
+        const cleanEmail = email.trim();
+        const cleanPassword = password; // Passwords shouldn't be trimmed usually, but trailing space might be intended? Let's use as is.
+
+        // 1. Basic Empty Check
+        if (!cleanEmail || !cleanPassword || !cleanName) {
             Alert.alert('Missing Fields', 'Please fill in all fields.');
             return;
         }
 
-        if (passwordError || emailError || nameError) {
-            Alert.alert('Invalid Details', 'Please fix the errors in the form.');
+        // 2. Strict Submission Validation (Double-Check)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const hasNumber = /\d/.test(cleanPassword);
+        const hasLetter = /[a-zA-Z]/.test(cleanPassword);
+
+        if (!emailRegex.test(cleanEmail)) {
+            Alert.alert('Invalid Email', 'Please enter a valid email address.');
+            return;
+        }
+
+        if (cleanPassword.length < 6) {
+            Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+            return;
+        }
+        if (!hasNumber) {
+            Alert.alert('Weak Password', 'Password must contain at least one number.');
+            return;
+        }
+        if (!hasLetter) {
+            Alert.alert('Weak Password', 'Password must contain at least one letter.');
+            return;
+        }
+
+        // 3. Name Validation
+        if (/\d/.test(cleanName)) {
+            Alert.alert('Invalid Name', 'Names cannot contain numbers.');
             return;
         }
 
         try {
             setLoading(true);
-
             console.log("Calling create-user function...");
 
             const { data, error } = await supabase.functions.invoke('create-user', {
                 body: {
-                    email,
-                    password,
-                    full_name: fullName,
+                    email: cleanEmail,
+                    password: cleanPassword,
+                    full_name: cleanName,
                 }
             });
 
@@ -182,7 +213,7 @@ export default function CreateStaffScreen() {
                             secureTextEntry
                         />
                         <Text style={[styles.helperText, passwordError ? { color: '#FF4444' } : {}]}>
-                            {passwordError || "Min 6 characters, at least 1 number."}
+                            {passwordError || "Min 6 chars. Must mix letters & numbers."}
                         </Text>
                     </View>
 

@@ -57,7 +57,8 @@ export default function SignupScreen() {
 
     const validatePassword = (text: string) => {
         setPassword(text);
-        const hasNumber = /\d/;
+        const hasNumber = /\d/.test(text);
+        const hasLetter = /[a-zA-Z]/.test(text);
         const minLength = 6;
 
         if (text.length === 0) {
@@ -67,16 +68,50 @@ export default function SignupScreen() {
 
         if (text.length < minLength) {
             setPasswordError('Password must be at least 6 characters');
-        } else if (!hasNumber.test(text)) {
+        } else if (!hasNumber) {
             setPasswordError('Password must contain at least one number');
+        } else if (!hasLetter) {
+            setPasswordError('Password must contain at least one letter');
         } else {
             setPasswordError(null);
         }
     };
 
     const handleSignup = async () => {
-        if (!email || !password || !fullName || !inviteCode) {
+        // Trim inputs to prevent accidental spaces
+        const cleanEmail = email.trim();
+        const cleanName = fullName.trim();
+        const cleanCode = inviteCode.trim();
+        const cleanPassword = password; // Do not trim password
+
+        if (!cleanEmail || !cleanPassword || !cleanName || !cleanCode) {
             Alert.alert('Missing Fields', 'Please fill in all fields (including School Code)');
+            return;
+        }
+
+        // Strict Submission Checks
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const hasNumber = /\d/.test(cleanPassword);
+        const hasLetter = /[a-zA-Z]/.test(cleanPassword);
+
+        if (!emailRegex.test(cleanEmail)) {
+            Alert.alert('Invalid Email', 'Please enter a valid email address.');
+            return;
+        }
+        if (cleanPassword.length < 6) {
+            Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+            return;
+        }
+        if (!hasNumber) {
+            Alert.alert('Weak Password', 'Password must contain at least one number.');
+            return;
+        }
+        if (!hasLetter) {
+            Alert.alert('Weak Password', 'Password must contain at least one letter.');
+            return;
+        }
+        if (/\d/.test(cleanName)) {
+            Alert.alert('Invalid Name', 'Names cannot contain numbers.');
             return;
         }
 
@@ -85,18 +120,12 @@ export default function SignupScreen() {
             return;
         }
 
-        // Final sanity check
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            Alert.alert('Invalid Email', 'Please enter a valid email address.');
-            return;
-        }
-
         try {
             setLoading(true);
             const { data: school, error: schoolError } = await supabase
                 .from('institutions')
                 .select('id, name')
-                .eq('invite_code', inviteCode.trim())
+                .eq('invite_code', cleanCode)
                 .maybeSingle();
 
             if (schoolError || !school) {
@@ -108,7 +137,7 @@ export default function SignupScreen() {
                 return;
             }
 
-            const { error } = await signUp(email, password, fullName, studentId, inviteCode.trim());
+            const { error } = await signUp(cleanEmail, cleanPassword, cleanName, studentId, cleanCode);
 
             if (error) {
                 const msg = error.message?.toLowerCase() || '';
@@ -227,7 +256,7 @@ export default function SignupScreen() {
                             secureTextEntry
                         />
                         <Text style={[styles.helperText, passwordError ? { color: '#FF4444' } : {}]}>
-                            {passwordError || "Min 6 characters, at least 1 number."}
+                            {passwordError || "Min 6 chars. Must mix letters & numbers."}
                         </Text>
                     </View>
 
