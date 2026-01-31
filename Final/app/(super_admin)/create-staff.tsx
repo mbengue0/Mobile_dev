@@ -25,14 +25,59 @@ export default function CreateStaffScreen() {
     const [fullName, setFullName] = useState('');
     const [loading, setLoading] = useState(false);
 
+    // Validation State
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [emailError, setEmailError] = useState<string | null>(null);
+    const [nameError, setNameError] = useState<string | null>(null);
+
+    const validateName = (text: string) => {
+        setFullName(text);
+        if (/\d/.test(text)) {
+            setNameError('Names cannot contain numbers.');
+        } else if (text.length > 0 && text.length < 2) {
+            setNameError('Name is too short.');
+        } else {
+            setNameError(null);
+        }
+    };
+
+    const validateEmail = (text: string) => {
+        setEmail(text);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (text.length > 0 && !emailRegex.test(text)) {
+            setEmailError('Please enter a valid email address.');
+        } else {
+            setEmailError(null);
+        }
+    };
+
+    const validatePassword = (text: string) => {
+        setPassword(text);
+        const hasNumber = /\d/;
+        const minLength = 6;
+
+        if (text.length === 0) {
+            setPasswordError(null);
+            return;
+        }
+
+        if (text.length < minLength) {
+            setPasswordError('Password must be at least 6 characters');
+        } else if (!hasNumber.test(text)) {
+            setPasswordError('Password must contain at least one number');
+        } else {
+            setPasswordError(null);
+        }
+    };
+
     const handleCreate = async () => {
         if (!email || !password || !fullName) {
             Alert.alert('Missing Fields', 'Please fill in all fields.');
             return;
         }
 
-        if (password.length < 6) {
-            Alert.alert('Invalid Password', 'Password must be at least 6 characters.');
+        if (passwordError || emailError || nameError) {
+            Alert.alert('Invalid Details', 'Please fix the errors in the form.');
             return;
         }
 
@@ -64,7 +109,18 @@ export default function CreateStaffScreen() {
             ]);
 
         } catch (err: any) {
-            Alert.alert('Creation Failed', err.message || 'An unknown error occurred.');
+            const msg = err.message?.toLowerCase() || '';
+
+            if (msg.includes('duplicate key') || msg.includes('unique constraint') || msg.includes('already registered')) {
+                Alert.alert(
+                    'Already Registered',
+                    'This Email is already in use. Please check the Users list.'
+                );
+            } else if (msg.includes('database error') || msg.includes('upstream')) {
+                Alert.alert('System Error', 'There was a problem creating the account. Please try again or check logs.');
+            } else {
+                Alert.alert('Creation Failed', err.message || 'An unknown error occurred.');
+            }
             console.error(err);
         } finally {
             setLoading(false);
@@ -91,40 +147,49 @@ export default function CreateStaffScreen() {
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('auth.fullName')}</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, nameError ? { marginBottom: 4, borderWidth: 1, borderColor: '#FF4444' } : {}]}
                             placeholder="e.g. Staff Member Name"
                             value={fullName}
-                            onChangeText={setFullName}
+                            onChangeText={validateName}
                         />
+                        <Text style={[styles.helperText, nameError ? { color: '#FF4444' } : {}]}>
+                            {nameError || "No numbers. (e.g. Mbaye Fall)"}
+                        </Text>
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('auth.email')}</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, emailError ? styles.inputError : {}]}
                             placeholder="e.g. staff@school.edu"
                             value={email}
-                            onChangeText={setEmail}
+                            onChangeText={validateEmail}
                             autoCapitalize="none"
                             keyboardType="email-address"
                         />
+                        <Text style={[styles.helperText, emailError ? { color: '#FF4444' } : {}]}>
+                            {emailError || "Must contain '@' and '.'. (e.g. correct@email.com)"}
+                        </Text>
                     </View>
 
                     <View style={styles.inputGroup}>
                         <Text style={styles.label}>{t('auth.password')}</Text>
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, passwordError ? styles.inputError : {}]}
                             placeholder="Min 6 characters"
                             value={password}
-                            onChangeText={setPassword}
+                            onChangeText={validatePassword}
                             secureTextEntry
                         />
+                        <Text style={[styles.helperText, passwordError ? { color: '#FF4444' } : {}]}>
+                            {passwordError || "Min 6 characters, at least 1 number."}
+                        </Text>
                     </View>
 
                     <TouchableOpacity
-                        style={[styles.button, loading && styles.buttonDisabled]}
+                        style={[styles.button, (loading || !!passwordError || !!emailError || !!nameError) && styles.buttonDisabled]}
                         onPress={handleCreate}
-                        disabled={loading}
+                        disabled={loading || !!passwordError || !!emailError || !!nameError}
                     >
                         {loading ? (
                             <ActivityIndicator color="#fff" />
@@ -198,6 +263,16 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         color: '#333',
+    },
+    inputError: {
+        borderColor: '#FF4444',
+        borderWidth: 1,
+    },
+    helperText: {
+        color: '#999',
+        fontSize: 12,
+        marginLeft: 4,
+        marginTop: 4,
     },
     button: {
         backgroundColor: '#5856D6',

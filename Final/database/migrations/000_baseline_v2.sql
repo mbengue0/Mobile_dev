@@ -342,5 +342,12 @@ CREATE POLICY "Admins View School Tx" ON wallet_transactions FOR SELECT USING (
 CREATE TRIGGER on_auth_user_created BEFORE INSERT ON auth.users FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- ============================================================================
+-- 11. PERMISSIONS & GRANTS (Fix for Edge Functions)
+-- ============================================================================
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+
+-- ============================================================================
 -- END OF BASELINE
 -- ============================================================================
